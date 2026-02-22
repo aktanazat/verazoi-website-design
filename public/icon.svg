@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Verazoi icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6f63b8"/>
+      <stop offset="100%" stop-color="#8e82da"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#f4f4f8"/>
+  <path d="M13 16h9l10 26 10-26h9L35 50h-6L13 16z" fill="url(#g)"/>
+</svg>
