@@ -3,6 +3,8 @@ import { ScrollProgress } from "@/components/scroll-progress"
 import { Hero } from "@/components/hero"
 import { PhoneMockup } from "@/components/phone-mockup"
 import { PageSectionsTabs } from "@/components/page-sections-tabs"
+import { Lifestyle } from "@/components/lifestyle"
+import { Closing } from "@/components/closing"
 import { Footer } from "@/components/footer"
 
 export default function Home() {
@@ -13,6 +15,8 @@ export default function Home() {
       <Hero />
       <PhoneMockup />
       <PageSectionsTabs />
+      <Lifestyle />
+      <Closing />
       <Footer />
     </main>
   )

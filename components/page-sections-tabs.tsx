@@ -7,7 +7,6 @@ import { ScoreDemo } from "@/components/score-demo"
 import { StartupFeatures } from "@/components/startup-features"
 import { FAQ } from "@/components/faq"
 import { EarlyAccess } from "@/components/early-access"
-import { Closing } from "@/components/closing"
 
 type ContentTab = "preview" | "details"
 
@@ -98,7 +97,6 @@ export function PageSectionsTabs() {
       )}
 
       <EarlyAccess />
-      <Closing />
     </>
   )
 }
