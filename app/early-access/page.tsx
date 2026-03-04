@@ -18,9 +18,14 @@ export default function EarlyAccessPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-6">
       <div className="mx-auto max-w-xl text-center">
-        <Link href="/" className="font-serif text-[18px] font-light text-foreground">
-          Verazoi
+        <Link href="/" className="inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
         </Link>
+
+        <h2 className="mt-8 font-serif text-[18px] font-light text-foreground">
+          Verazoi
+        </h2>
 
         <h1 className="mt-12 font-serif text-[clamp(1.75rem,3.5vw,3rem)] font-light leading-[1.1] text-balance">
           <span className="text-gradient">Turn your CGM data</span>{" "}

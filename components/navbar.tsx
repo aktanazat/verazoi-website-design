@@ -76,7 +76,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="flex items-center gap-4">
           <Link
             href="/login"
             className="text-[13px] tracking-[0.02em] text-muted-foreground transition-colors hover:text-foreground"
@@ -85,16 +85,14 @@ export function Navbar() {
           </Link>
           <Link
             href="/early-access"
-            className={`group relative overflow-hidden rounded-full bg-primary px-5 py-2 text-[13px] tracking-[0.02em] text-primary-foreground transition-all duration-500 hover:shadow-lg hover:shadow-primary/20 ${
+            className={`group relative hidden overflow-hidden rounded-full bg-primary px-5 py-2 text-[13px] tracking-[0.02em] text-primary-foreground transition-all duration-500 hover:shadow-lg hover:shadow-primary/20 md:inline-flex ${
               showCta ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 pointer-events-none"
             }`}
           >
             <span className="relative z-10">Get early access</span>
             <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           </Link>
-        </div>
-
-        <div className="flex items-center gap-4 md:hidden">
+          <div className="md:hidden">
           <button
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close menu" : "Open menu"}
@@ -105,6 +103,7 @@ export function Navbar() {
               <Menu className="h-5 w-5 text-foreground" />
             )}
           </button>
+          </div>
         </div>
       </nav>
 
