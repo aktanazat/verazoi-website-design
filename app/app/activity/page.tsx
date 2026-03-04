@@ -88,7 +88,7 @@ export default function ActivityPage() {
 
       <div className="relative mt-6 border border-border p-5">
         <div
-          className={`transition-opacity duration-200 ${tab === "activity" ? "opacity-100" : "pointer-events-none absolute inset-0 p-5 opacity-0"}`}
+          className={`transition-opacity duration-300 ease-in-out ${tab === "activity" ? "opacity-100" : "pointer-events-none absolute inset-0 p-5 opacity-0"}`}
         >
           <div>
             <label className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">
@@ -150,7 +150,7 @@ export default function ActivityPage() {
         </div>
 
         <div
-          className={`transition-opacity duration-200 ${tab === "sleep" ? "opacity-100" : "pointer-events-none absolute inset-0 p-5 opacity-0"}`}
+          className={`transition-opacity duration-300 ease-in-out ${tab === "sleep" ? "opacity-100" : "pointer-events-none absolute inset-0 p-5 opacity-0"}`}
         >
           <div>
             <label className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">
