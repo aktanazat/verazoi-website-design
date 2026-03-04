@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAppData } from "@/contexts/app-data-context"
 
 export function StabilityScore() {
-  const score = 74
+  const { state } = useAppData()
+  const score = state.stabilityScore
   const [displayed, setDisplayed] = useState(0)
 
   useEffect(() => {
+    setDisplayed(0)
     const timer = setTimeout(() => {
       const step = () => {
         setDisplayed((prev) => {
@@ -18,7 +21,7 @@ export function StabilityScore() {
       return () => clearInterval(interval)
     }, 300)
     return () => clearTimeout(timer)
-  }, [])
+  }, [score])
 
   const circumference = 2 * Math.PI * 54
   const offset = circumference - (displayed / 100) * circumference
@@ -30,6 +33,17 @@ export function StabilityScore() {
     return "Needs attention"
   }
 
+  const readings = state.glucoseReadings
+  const avgGlucose = readings.length > 0
+    ? Math.round(readings.reduce((sum, r) => sum + r.value, 0) / readings.length)
+    : 0
+  const variability = readings.length > 1
+    ? Math.round(Math.max(...readings.map((r) => r.value)) - Math.min(...readings.map((r) => r.value)))
+    : 0
+  const inRange = readings.length > 0
+    ? Math.round((readings.filter((r) => r.value >= 70 && r.value <= 140).length / readings.length) * 100)
+    : 0
+
   return (
     <div className="border border-border p-6">
       <div className="flex items-start justify-between">
@@ -37,7 +51,7 @@ export function StabilityScore() {
           <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">
             Stability Score
           </p>
-          <p className="mt-1 text-[12px] text-muted-foreground/60">
+          <p className="mt-1 text-[12px] text-muted-foreground/80">
             Last 7 days
           </p>
         </div>
@@ -72,7 +86,7 @@ export function StabilityScore() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-serif text-[36px] font-light text-foreground">
+            <span className="font-serif text-[36px] font-light leading-none text-foreground">
               {displayed}
             </span>
           </div>
@@ -81,15 +95,15 @@ export function StabilityScore() {
 
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div className="text-center">
-          <p className="font-serif text-[18px] font-light text-foreground">92</p>
+          <p className="font-serif text-[18px] font-light text-foreground">{avgGlucose}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Avg glucose</p>
         </div>
         <div className="text-center">
-          <p className="font-serif text-[18px] font-light text-foreground">18</p>
+          <p className="font-serif text-[18px] font-light text-foreground">{variability}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Variability</p>
         </div>
         <div className="text-center">
-          <p className="font-serif text-[18px] font-light text-foreground">94%</p>
+          <p className="font-serif text-[18px] font-light text-foreground">{inRange}%</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">In range</p>
         </div>
       </div>

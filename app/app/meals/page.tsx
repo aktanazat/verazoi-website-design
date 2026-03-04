@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Plus, X } from "lucide-react"
+import { useAppData } from "@/contexts/app-data-context"
 
 const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack"] as const
 type MealType = (typeof mealTypes)[number]
@@ -12,6 +13,7 @@ const quickFoods = [
 ]
 
 export default function MealsPage() {
+  const { dispatch } = useAppData()
   const [mealType, setMealType] = useState<MealType>("Breakfast")
   const [selected, setSelected] = useState<string[]>([])
   const [custom, setCustom] = useState("")
@@ -33,6 +35,15 @@ export default function MealsPage() {
 
   const handleSave = () => {
     if (selected.length > 0) {
+      dispatch({
+        type: "addMeal",
+        payload: {
+          time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+          mealType,
+          foods: selected,
+          notes,
+        },
+      })
       setSaved(true)
       setTimeout(() => {
         setSaved(false)
@@ -43,7 +54,7 @@ export default function MealsPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-2xl">
       <p className="text-[12px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
         Log Meal
       </p>
@@ -105,7 +116,7 @@ export default function MealsPage() {
             onChange={(e) => setCustom(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addCustom()}
             placeholder="Add custom food..."
-            className="flex-1 border border-border bg-transparent px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:border-foreground/30 focus:outline-none transition-colors"
+            className="flex-1 border border-border bg-transparent px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none transition-colors"
           />
           <button
             onClick={addCustom}
@@ -148,7 +159,7 @@ export default function MealsPage() {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="How did you feel after eating?"
           rows={3}
-          className="mt-3 w-full resize-none border border-border bg-transparent px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:border-foreground/30 focus:outline-none transition-colors"
+          className="mt-3 w-full resize-none border border-border bg-transparent px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none transition-colors"
         />
       </div>
 

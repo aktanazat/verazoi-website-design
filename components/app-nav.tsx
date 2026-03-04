@@ -48,7 +48,7 @@ export function AppNav() {
 
   return (
     <>
-      <header className="border-b border-border px-5 py-4">
+      <header className="border-b border-border px-5 py-4 md:hidden">
         <div className="mx-auto flex max-w-md items-center justify-between">
           <Link href="/" className="font-serif text-[18px] font-light text-foreground">
             Verazoi
@@ -59,7 +59,7 @@ export function AppNav() {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-sm">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-sm md:hidden">
         <div className="mx-auto flex max-w-md">
           {tabs.map((tab) => {
             const active = pathname === tab.href
@@ -70,7 +70,7 @@ export function AppNav() {
                 scroll={false}
                 onClick={navigateTab(tab.href)}
                 className={`flex flex-1 flex-col items-center gap-1 py-3 transition-colors ${
-                  active ? "text-foreground" : "text-muted-foreground/50"
+                  active ? "text-foreground" : "text-muted-foreground/70"
                 }`}
               >
                 <tab.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.5} />

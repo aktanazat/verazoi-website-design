@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Moon, Footprints } from "lucide-react"
+import { useAppData } from "@/contexts/app-data-context"
 
 const activityTypes = [
   "Walking", "Running", "Cycling", "Weights", "Yoga", "Swimming", "HIIT", "Other",
@@ -10,6 +11,7 @@ const activityTypes = [
 const intensities = ["Light", "Moderate", "Intense"] as const
 
 export default function ActivityPage() {
+  const { dispatch } = useAppData()
   const [tab, setTab] = useState<"activity" | "sleep">("activity")
 
   // Activity state
@@ -24,6 +26,26 @@ export default function ActivityPage() {
   const [saved, setSaved] = useState(false)
 
   const handleSave = () => {
+    if (tab === "activity") {
+      dispatch({
+        type: "addActivity",
+        payload: {
+          time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+          activityType: actType,
+          duration: Number(duration),
+          intensity,
+        },
+      })
+    } else {
+      dispatch({
+        type: "addSleep",
+        payload: {
+          time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+          hours: Number(sleepHours),
+          quality: sleepQuality,
+        },
+      })
+    }
     setSaved(true)
     setTimeout(() => {
       setSaved(false)
@@ -33,7 +55,7 @@ export default function ActivityPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-2xl">
       <p className="text-[12px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
         Log
       </p>
@@ -102,7 +124,7 @@ export default function ActivityPage() {
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="0"
-                className="w-full bg-transparent font-serif text-[40px] font-light text-foreground placeholder:text-muted-foreground/20 focus:outline-none"
+                className="w-full bg-transparent font-serif text-[40px] font-light text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
               />
               <span className="text-[14px] text-muted-foreground">minutes</span>
             </div>
@@ -144,7 +166,7 @@ export default function ActivityPage() {
                 value={sleepHours}
                 onChange={(e) => setSleepHours(e.target.value)}
                 placeholder="0"
-                className="w-full bg-transparent font-serif text-[40px] font-light text-foreground placeholder:text-muted-foreground/20 focus:outline-none"
+                className="w-full bg-transparent font-serif text-[40px] font-light text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
               />
               <span className="text-[14px] text-muted-foreground">hours</span>
             </div>

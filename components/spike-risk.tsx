@@ -34,7 +34,7 @@ export function SpikeRisk() {
           <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">
             Spike Risk
           </p>
-          <p className="mt-1 text-[12px] text-muted-foreground/60">
+          <p className="mt-1 text-[12px] text-muted-foreground/80">
             Next 4 hours
           </p>
         </div>
@@ -53,7 +53,7 @@ export function SpikeRisk() {
       </div>
 
       <div className="mt-6">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
           Contributing Factors
         </p>
 
@@ -74,7 +74,7 @@ export function SpikeRisk() {
                   </span>
                   <span className="text-[13px] text-foreground">{factor.label}</span>
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 transition-transform group-open:rotate-90" strokeWidth={1.5} />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-open:rotate-90" strokeWidth={1.5} />
               </summary>
               <div className="pb-4 pl-[72px]">
                 <p className="text-[13px] leading-relaxed text-muted-foreground">
@@ -87,7 +87,7 @@ export function SpikeRisk() {
       </div>
 
       <div className="mt-5 border-t border-border pt-5">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
           Suggestion
         </p>
         <p className="mt-3 text-[13px] leading-relaxed text-foreground/80">

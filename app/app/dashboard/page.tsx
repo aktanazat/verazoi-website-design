@@ -14,10 +14,12 @@ export default function DashboardPage() {
         Dashboard
       </h1>
 
-      <div className="mt-8 flex flex-col gap-6">
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <StabilityScore />
         <SpikeRisk />
-        <DailyTimeline />
+        <div className="lg:col-span-2">
+          <DailyTimeline />
+        </div>
       </div>
     </div>
   )

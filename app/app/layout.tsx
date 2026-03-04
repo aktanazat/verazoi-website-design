@@ -1,5 +1,8 @@
 import { AppNav } from "@/components/app-nav"
 import { AppRouteTransition } from "@/components/app-route-transition"
+import { AppSidebar } from "@/components/app-sidebar"
+import { AppDataProvider } from "@/contexts/app-data-context"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 export default function AppLayout({
   children,
@@ -7,13 +10,18 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background">
-      <AppNav />
-      <main className="flex-1 px-5 pb-24 pt-6">
-        <div className="mx-auto max-w-md">
-          <AppRouteTransition>{children}</AppRouteTransition>
+    <AppDataProvider>
+      <SidebarProvider>
+        <div className="flex min-h-dvh">
+          <AppSidebar />
+          <SidebarInset>
+            <main className="mx-auto w-full max-w-5xl flex-1 px-5 pb-24 pt-6 md:px-8 md:pb-8">
+              <AppRouteTransition>{children}</AppRouteTransition>
+            </main>
+          </SidebarInset>
         </div>
-      </main>
-    </div>
+        <AppNav />
+      </SidebarProvider>
+    </AppDataProvider>
   )
 }
