@@ -85,8 +85,8 @@ export function StabilityScore() {
               className="text-foreground transition-all duration-700 ease-out"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-serif text-[36px] font-light leading-none text-foreground">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="-mt-1 font-serif text-[36px] font-light leading-none text-foreground">
               {displayed}
             </span>
           </div>
