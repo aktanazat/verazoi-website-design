@@ -54,7 +54,7 @@ export default function MealsPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <p className="text-[12px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
         Log Meal
       </p>
