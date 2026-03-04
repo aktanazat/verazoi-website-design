@@ -263,9 +263,9 @@ export default function LogPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="border border-border p-6">
           {selected.length > 0 && (
-            <div className="border border-border p-6">
+            <div className="mb-5">
               <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Selected ({selected.length})</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {selected.map((food) => (
@@ -277,16 +277,14 @@ export default function LogPage() {
               </div>
             </div>
           )}
-          <div className="border border-border p-6">
-            <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Notes (optional)</p>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="How did you feel after eating?"
-              rows={5}
-              className="mt-3 w-full resize-none border border-border bg-transparent px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none transition-colors"
-            />
-          </div>
+          <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Notes (optional)</p>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="How did you feel after eating?"
+            rows={5}
+            className="mt-3 w-full resize-none border border-border bg-transparent px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/30 focus:outline-none transition-colors"
+          />
         </div>
       </div>
 
