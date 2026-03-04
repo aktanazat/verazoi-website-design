@@ -48,7 +48,7 @@ export function Lifestyle() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {images.map((img, i) => (
             <div
-              key={img.src}
+              key={img.alt}
               className={`group overflow-hidden rounded-2xl transition-all duration-700 ease-out ${
                 visible
                   ? "translate-y-0 opacity-100"
