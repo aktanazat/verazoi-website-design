@@ -7,17 +7,19 @@ import { Menu, X } from "lucide-react"
 const links = [
   { label: "Overview", href: "#overview" },
   { label: "Quick View", href: "#quick-view" },
-  { label: "Early Access", href: "#early-access" },
 ]
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [showCta, setShowCta] = useState(false)
   const [open, setOpen] = useState(false)
   const [activeHref, setActiveHref] = useState(links[0].href)
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 40)
+      setShowCta(window.scrollY > window.innerHeight * 0.6)
+
       const checkpoint = window.scrollY + 140
       let nextActive = links[0].href
 
@@ -50,7 +52,6 @@ export function Navbar() {
     >
       <nav className="mx-auto flex max-w-screen-lg items-center justify-between px-6 py-5">
         <Link href="/" className="flex items-center gap-2">
-          {/* Drop your logo at /public/logo.svg (recommended: 140x40px) */}
           <span className="font-serif text-[22px] font-light tracking-wide text-foreground">
             Verazoi
           </span>
@@ -76,7 +77,9 @@ export function Navbar() {
         <div className="hidden items-center md:flex">
           <Link
             href="#early-access"
-            className="group relative overflow-hidden rounded-full bg-primary px-5 py-2 text-[13px] tracking-[0.02em] text-primary-foreground transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
+            className={`group relative overflow-hidden rounded-full bg-primary px-5 py-2 text-[13px] tracking-[0.02em] text-primary-foreground transition-all duration-500 hover:shadow-lg hover:shadow-primary/20 ${
+              showCta ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 pointer-events-none"
+            }`}
           >
             <span className="relative z-10">Get early access</span>
             <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

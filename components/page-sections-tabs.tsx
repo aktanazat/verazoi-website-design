@@ -6,7 +6,6 @@ import { StabilityExplainer } from "@/components/stability-explainer"
 import { ScoreDemo } from "@/components/score-demo"
 import { StartupFeatures } from "@/components/startup-features"
 import { FAQ } from "@/components/faq"
-import { EarlyAccess } from "@/components/early-access"
 
 type ContentTab = "preview" | "details"
 
@@ -96,7 +95,6 @@ export function PageSectionsTabs() {
         </>
       )}
 
-      <EarlyAccess />
     </>
   )
 }
