@@ -58,7 +58,7 @@ export default function LoginPage() {
 
         <p className="mt-8 text-center text-[12px] text-muted-foreground">
           {"Don't have an account? "}
-          <a href="/#early-access" className="text-foreground underline underline-offset-4">
+          <a href="/early-access" className="text-foreground underline underline-offset-4">
             Join waitlist
           </a>
         </p>

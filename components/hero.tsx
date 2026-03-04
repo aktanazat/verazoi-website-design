@@ -81,7 +81,7 @@ export function Hero() {
 
         <div className="mt-10 flex justify-center">
           <a
-            href="#early-access"
+            href="/early-access"
             className="group relative overflow-hidden rounded-full bg-primary px-8 py-3.5 text-[13px] font-medium tracking-[0.04em] text-primary-foreground transition-all duration-300 hover:shadow-xl hover:shadow-primary/25"
           >
             <span className="relative z-10">Get early access</span>

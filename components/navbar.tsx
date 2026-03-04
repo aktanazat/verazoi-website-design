@@ -78,7 +78,7 @@ export function Navbar() {
 
         <div className="hidden items-center md:flex">
           <Link
-            href="#early-access"
+            href="/early-access"
             className={`group relative overflow-hidden rounded-full bg-primary px-5 py-2 text-[13px] tracking-[0.02em] text-primary-foreground transition-all duration-500 hover:shadow-lg hover:shadow-primary/20 ${
               showCta ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 pointer-events-none"
             }`}
@@ -121,7 +121,7 @@ export function Navbar() {
               </Link>
             ))}
             <Link
-              href="#early-access"
+              href="/early-access"
               onClick={() => setOpen(false)}
               className="mt-4 rounded-full bg-primary px-5 py-3 text-center text-[13px] tracking-[0.02em] text-primary-foreground"
             >

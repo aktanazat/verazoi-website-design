@@ -27,7 +27,7 @@ export function Footer() {
               <Link href="#stability-score" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
                 Stability Score
               </Link>
-              <Link href="#early-access" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="/early-access" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
                 Early access
               </Link>
             </div>
