@@ -29,6 +29,7 @@ services:
     name: verazoi-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
 databases:
   - name: verazoi-db
