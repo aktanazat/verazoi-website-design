@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { BarChart3, ClipboardPen, TrendingUp, Sparkles } from "lucide-react"
 import { AppDataProvider } from "@/contexts/app-data-context"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 const navItems = [
   { label: "Dashboard", href: "/app/dashboard", icon: BarChart3 },
@@ -52,6 +53,7 @@ export default function AppLayout({
   }
 
   return (
+    <ErrorBoundary>
     <AppDataProvider>
       <div className="min-h-dvh bg-background">
         {/* Desktop top nav — fixed like landing navbar */}
@@ -131,5 +133,6 @@ export default function AppLayout({
         </nav>
       </div>
     </AppDataProvider>
+    </ErrorBoundary>
   )
 }

@@ -2,7 +2,6 @@ import math
 
 
 def glucose_score(readings: list[dict]) -> float:
-    """CV + TIR + mean penalty. Max 35 pts."""
     if len(readings) < 2:
         return 50.0
 
@@ -39,7 +38,6 @@ def glucose_score(readings: list[dict]) -> float:
 
 
 def activity_score(activities: list[dict], wearable_steps: int | None, wearable_active_min: int | None) -> float:
-    """WHO moderate-equivalent minutes. Max 25 pts."""
     total = 0.0
     multipliers = {"light": 0.5, "moderate": 1.0, "intense": 2.0}
     for a in activities:
@@ -56,7 +54,6 @@ def activity_score(activities: list[dict], wearable_steps: int | None, wearable_
 
 
 def sleep_score(sleep_entries: list[dict], wearable_sleep_hours: float | None) -> float:
-    """Duration + quality. Max 20 pts."""
     if wearable_sleep_hours and wearable_sleep_hours > 0:
         hours = wearable_sleep_hours
         quality = sleep_entries[-1]["quality"] if sleep_entries else "fair"
@@ -78,7 +75,6 @@ def sleep_score(sleep_entries: list[dict], wearable_sleep_hours: float | None) -
 
 
 def heart_rate_score(resting_hr: int | None) -> float:
-    """Max 20 pts."""
     if resting_hr is None:
         return 10.0
     if resting_hr <= 60:

@@ -22,9 +22,7 @@ export default function LoginPage() {
 
     try {
       const fn = mode === "login" ? api.login : api.register
-      const res = await fn(email, password)
-      localStorage.setItem("verazoi_token", res.access_token)
-      localStorage.setItem("verazoi_email", email)
+      await fn(email, password)
       router.push("/app/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connection failed")

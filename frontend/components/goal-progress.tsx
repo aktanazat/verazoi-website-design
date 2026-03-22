@@ -3,11 +3,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { getGoalProgress, type GoalProgress as GoalProgressData } from "@/lib/api"
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 function ProgressBar({ label, value, max, display }: { label: string; value: number; max: number; display: string }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
@@ -28,14 +23,10 @@ export function GoalProgress() {
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
-    const token = getToken()
-    if (!token) { setLoading(false); return }
     try {
-      const progress = await getGoalProgress(token)
+      const progress = await getGoalProgress()
       setData(progress)
-    } catch {
-      // no data
-    }
+    } catch {}
     setLoading(false)
   }, [])
 

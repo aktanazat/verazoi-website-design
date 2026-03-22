@@ -11,8 +11,8 @@ const impactColors: Record<string, string> = {
 
 export function SpikeRisk() {
   const { state } = useAppData()
-  const riskPercent = Math.round(state.spikeRisk * 100)
-  const factors = state.spikeFactors
+  const riskPercent = Math.round((state.stability?.spike_risk ?? 0) * 100)
+  const factors = state.stability?.spike_factors ?? []
 
   const riskLabel = riskPercent >= 60 ? "Elevated" : riskPercent >= 40 ? "Moderate" : "Low"
 

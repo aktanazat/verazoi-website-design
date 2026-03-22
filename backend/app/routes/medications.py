@@ -29,7 +29,7 @@ async def create_medication(
 async def list_medications(
     user_id: str = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db),
-    limit: int = Query(50, le=200),
+    limit: int = Query(50, ge=1, le=200),
 ):
     rows = await db.fetch(
         """SELECT id, name, dose_value, dose_unit, timing, notes, recorded_at

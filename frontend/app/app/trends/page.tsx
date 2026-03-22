@@ -14,11 +14,6 @@ const periods = [
   { label: "90d", days: 90 },
 ] as const
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 export default function TrendsPage() {
   const [period, setPeriod] = useState(7)
   const [glucoseData, setGlucoseData] = useState<GlucoseTrendPoint[]>([])
@@ -26,19 +21,15 @@ export default function TrendsPage() {
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async (days: number) => {
-    const token = getToken()
-    if (!token) { setLoading(false); return }
     setLoading(true)
     try {
       const [glucose, stability] = await Promise.all([
-        getGlucoseTrend(token, days),
-        getStabilityTrend(token, days),
+        getGlucoseTrend(days),
+        getStabilityTrend(days),
       ])
       setGlucoseData(glucose)
       setStabilityData(stability)
-    } catch {
-      // no data
-    }
+    } catch {}
     setLoading(false)
   }, [])
 

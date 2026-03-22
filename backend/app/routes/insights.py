@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 import asyncpg
 from app.database import get_db
 from app.redis_client import get_redis
@@ -28,7 +28,7 @@ async def get_weekly(
     if row:
         return InsightResponse(id=str(row["id"]), week_start=str(row["week_start"]),
                                summary=row["summary"], generated_at=row["generated_at"])
-    return {"status": "no_insight", "message": "No insight generated yet for this week. Use POST to generate."}
+    raise HTTPException(status_code=404, detail="No insight generated for this week")
 
 
 @router.post("/weekly/generate", status_code=201)
@@ -38,7 +38,7 @@ async def generate_weekly(
 ):
     r = await get_redis()
     cache_key = f"insight_gen:{user_id}"
-    if await r.exists(cache_key):
+    if r and await r.exists(cache_key):
         return {"status": "rate_limited", "message": "Insight already generated recently. Try again later."}
 
     ws = current_week_start()
@@ -52,7 +52,8 @@ async def generate_weekly(
         user_id, ws, summary,
     )
 
-    await r.setex(cache_key, 3600, "1")
+    if r:
+        await r.setex(cache_key, 3600, "1")
 
     return InsightResponse(id=str(row["id"]), week_start=str(ws),
                            summary=summary, generated_at=row["generated_at"])

@@ -64,11 +64,15 @@ final class AuthState {
     }
 
     func logout() {
+        Task { await APIClient.shared.logout() }
         token = nil
         email = nil
         isAuthenticated = false
         UserDefaults.standard.removeObject(forKey: tokenKey)
         UserDefaults.standard.removeObject(forKey: emailKey)
-        Task { await APIClient.shared.setToken(nil) }
+    }
+
+    func handleAuthError() {
+        logout()
     }
 }

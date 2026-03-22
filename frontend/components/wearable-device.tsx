@@ -4,24 +4,14 @@ import { useState, useEffect, useCallback } from "react"
 import { Watch, Heart, Footprints, Moon, Flame, RefreshCw } from "lucide-react"
 import { getWearableStatus, syncWearable, type WearableStatus } from "@/lib/api"
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 export function WearableDevice() {
   const [status, setStatus] = useState<WearableStatus | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const fetchStatus = useCallback(async () => {
-    const token = getToken()
-    if (!token) {
-      setLoading(false)
-      return
-    }
     try {
-      const data = await getWearableStatus(token)
+      const data = await getWearableStatus()
       setStatus(data)
     } catch {
       setStatus(null)
@@ -32,15 +22,11 @@ export function WearableDevice() {
   useEffect(() => { fetchStatus() }, [fetchStatus])
 
   const handleSync = async () => {
-    const token = getToken()
-    if (!token) return
     setSyncing(true)
     try {
-      await syncWearable(token, {})
+      await syncWearable({})
       await fetchStatus()
-    } catch {
-      // sync failed silently
-    }
+    } catch {}
     setSyncing(false)
   }
 

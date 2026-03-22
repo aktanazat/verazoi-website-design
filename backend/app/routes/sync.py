@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, Depends
 import asyncpg
 from app.database import get_db

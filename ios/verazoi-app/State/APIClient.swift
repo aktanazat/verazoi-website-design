@@ -4,6 +4,7 @@ enum APIError: Error {
     case invalidURL
     case httpError(Int, String)
     case decodingError
+    case notAuthenticated
 }
 
 actor APIClient {
@@ -16,6 +17,9 @@ actor APIClient {
     #endif
 
     private var token: String?
+    private var refreshToken: String?
+    private var isRefreshing = false
+
     private let decoder: JSONDecoder = {
         let d = JSONDecoder()
         d.keyDecodingStrategy = .convertFromSnakeCase
@@ -29,10 +33,12 @@ actor APIClient {
     }()
 
     func setToken(_ t: String?) { token = t }
+    func setRefreshToken(_ t: String?) { refreshToken = t }
+    func getToken() -> String? { token }
 
     // MARK: - Core
 
-    private func request<T: Decodable>(_ method: String, _ path: String, body: Encodable? = nil) async throws -> T {
+    private func request<T: Decodable>(_ method: String, _ path: String, body: Encodable? = nil, retry: Bool = true) async throws -> T {
         guard let url = URL(string: baseURL + path) else { throw APIError.invalidURL }
 
         var req = URLRequest(url: url)
@@ -44,12 +50,27 @@ actor APIClient {
         let (data, response) = try await URLSession.shared.data(for: req)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
 
+        if status == 401 && retry {
+            let refreshed = await attemptTokenRefresh()
+            if refreshed {
+                return try await request(method, path, body: body, retry: false)
+            }
+            throw APIError.notAuthenticated
+        }
+
         if status < 200 || status >= 300 {
             let detail = (try? JSONDecoder().decode([String: String].self, from: data))?["detail"] ?? "Error \(status)"
             throw APIError.httpError(status, detail)
         }
 
         return try decoder.decode(T.self, from: data)
+    }
+
+    private func attemptTokenRefresh() async -> Bool {
+        // Token refresh for iOS uses the stored refresh token
+        // The backend supports Bearer auth for mobile clients
+        // For now, signal that re-login is needed
+        return false
     }
 
     // MARK: - Auth
@@ -67,6 +88,15 @@ actor APIClient {
         let res: TokenResponse = try await request("POST", "/auth/login", body: AuthBody(email: email, password: password))
         token = res.accessToken
         return res.accessToken
+    }
+
+    func logout() async {
+        // Hit the logout endpoint to revoke server-side refresh tokens
+        if token != nil {
+            _ = try? await request("POST", "/auth/logout") as [String: String]
+        }
+        token = nil
+        refreshToken = nil
     }
 
     // MARK: - Glucose

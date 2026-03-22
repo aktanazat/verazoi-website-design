@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAppData } from "@/contexts/app-data-context"
+import { formatTime } from "@/lib/utils"
 
 export default function SleepLogPage() {
   const { state, addSleep } = useAppData()
@@ -86,7 +87,7 @@ export default function SleepLogPage() {
                     <p className="text-[13px] text-foreground">{e.label}</p>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">{e.value}</p>
                   </div>
-                  <span className="text-[11px] text-muted-foreground/70">{e.time}</span>
+                  <span className="text-[11px] text-muted-foreground/70">{formatTime(e.recorded_at)}</span>
                 </div>
               ))
             )}

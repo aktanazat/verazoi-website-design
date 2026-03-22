@@ -184,8 +184,8 @@ enum StabilityAlgorithm {
 
         // Recent glucose trajectory.
         let recent = input.glucoseReadings.suffix(3).map { Double($0.value) }
-        if recent.count >= 2 {
-            let trend = recent.last! - recent.first!
+        if recent.count >= 2, let last = recent.last, let first = recent.first {
+            let trend = last - first
             if trend > 20 {
                 riskScore += 0.15
                 factors.append(SpikeFactor(

@@ -3,40 +3,27 @@
 import { useState, useEffect, useCallback } from "react"
 import { getGoals, updateGoals, type Goals } from "@/lib/api"
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 export function GoalSettings() {
   const [goals, setGoals] = useState<Goals>({ glucose_low: 70, glucose_high: 140, daily_steps: 10000, sleep_hours: 8 })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   const fetchGoals = useCallback(async () => {
-    const token = getToken()
-    if (!token) return
     try {
-      const data = await getGoals(token)
+      const data = await getGoals()
       setGoals(data)
-    } catch {
-      // defaults
-    }
+    } catch {}
   }, [])
 
   useEffect(() => { fetchGoals() }, [fetchGoals])
 
   const handleSave = async () => {
-    const token = getToken()
-    if (!token) return
     setSaving(true)
     try {
-      await updateGoals(token, goals)
+      await updateGoals(goals)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch {
-      // save failed
-    }
+    } catch {}
     setSaving(false)
   }
 

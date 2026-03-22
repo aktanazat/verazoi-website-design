@@ -2,8 +2,9 @@
 
 import { Droplets, Utensils, Footprints, Moon } from "lucide-react"
 import { useAppData } from "@/contexts/app-data-context"
+import { formatTime } from "@/lib/utils"
 
-const iconMap = {
+const iconMap: Record<string, typeof Droplets> = {
   glucose: Droplets,
   meal: Utensils,
   activity: Footprints,
@@ -55,7 +56,7 @@ export function DailyTimeline() {
                       <p className="text-[13px] text-foreground">{event.label}</p>
                       <p className="mt-0.5 text-[12px] text-muted-foreground">{event.value}</p>
                     </div>
-                    <span className="text-[11px] text-muted-foreground/70">{event.time}</span>
+                    <span className="text-[11px] text-muted-foreground/70">{formatTime(event.recorded_at)}</span>
                   </div>
                 </div>
               </div>

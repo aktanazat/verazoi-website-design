@@ -16,11 +16,6 @@ const timingLabels: Record<string, string> = {
   other: "Other",
 }
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 export default function MedicationsLogPage() {
   const [name, setName] = useState("")
   const [doseValue, setDoseValue] = useState("")
@@ -32,31 +27,23 @@ export default function MedicationsLogPage() {
   const [recent, setRecent] = useState<Medication[]>([])
 
   const fetchRecent = useCallback(async () => {
-    const token = getToken()
-    if (!token) return
     try {
-      const data = await listMedications(token, 20)
+      const data = await listMedications(20)
       setRecent(data)
-    } catch {
-      // no data
-    }
+    } catch {}
   }, [])
 
   useEffect(() => { fetchRecent() }, [fetchRecent])
 
   const handleSave = async () => {
     if (!name || !doseValue || saving) return
-    const token = getToken()
-    if (!token) return
     setSaving(true)
     try {
-      await createMedication(token, name, Number(doseValue), doseUnit, timing, notes)
+      await createMedication(name, Number(doseValue), doseUnit, timing, notes)
       await fetchRecent()
       setSaved(true)
       setTimeout(() => { setSaved(false); setName(""); setDoseValue(""); setNotes("") }, 2000)
-    } catch {
-      // save failed
-    }
+    } catch {}
     setSaving(false)
   }
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { useAppData } from "@/contexts/app-data-context"
+import { formatTime } from "@/lib/utils"
 
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus }
 
@@ -30,7 +31,7 @@ export default function GlucoseLogPage() {
   }
 
   const recentReadings = state.glucoseReadings.map((r, i, arr) => ({
-    time: r.time,
+    time: formatTime(r.recorded_at),
     value: r.value,
     trend: i === 0 ? "stable" as const : getTrend(r.value, arr[i - 1].value),
   }))

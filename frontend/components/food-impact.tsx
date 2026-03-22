@@ -3,24 +3,15 @@
 import { useState, useEffect, useCallback } from "react"
 import { getFoodImpact, type FoodImpact as FoodImpactData } from "@/lib/api"
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 export function FoodImpact() {
   const [data, setData] = useState<FoodImpactData[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
-    const token = getToken()
-    if (!token) { setLoading(false); return }
     try {
-      const items = await getFoodImpact(token)
+      const items = await getFoodImpact()
       setData(items)
-    } catch {
-      // no data
-    }
+    } catch {}
     setLoading(false)
   }, [])
 

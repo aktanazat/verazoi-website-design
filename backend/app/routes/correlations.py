@@ -15,12 +15,18 @@ async def meal_glucose(
 ):
     rows = await db.fetch(
         """SELECT m.id AS meal_id, m.meal_type, m.foods, m.recorded_at,
-                  (SELECT value FROM glucose_readings g
-                   WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at - interval '30 min' AND m.recorded_at
-                   ORDER BY g.recorded_at DESC LIMIT 1) AS pre_glucose,
-                  (SELECT MAX(value) FROM glucose_readings g
-                   WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at AND m.recorded_at + interval '3 hours') AS peak_glucose
+                  pre.value AS pre_glucose,
+                  peak.max_val AS peak_glucose
            FROM meals m
+           LEFT JOIN LATERAL (
+               SELECT value FROM glucose_readings g
+               WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at - interval '30 min' AND m.recorded_at
+               ORDER BY g.recorded_at DESC LIMIT 1
+           ) pre ON true
+           LEFT JOIN LATERAL (
+               SELECT MAX(value) AS max_val FROM glucose_readings g
+               WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at AND m.recorded_at + interval '3 hours'
+           ) peak ON true
            WHERE m.user_id = $1::uuid AND m.recorded_at >= CURRENT_DATE - $2::int * interval '1 day'
            ORDER BY m.recorded_at DESC""",
         user_id, days,
@@ -46,14 +52,17 @@ async def food_impact(
 ):
     rows = await db.fetch(
         """WITH meal_deltas AS (
-             SELECT m.foods,
-                    (SELECT MAX(value) FROM glucose_readings g
-                     WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at AND m.recorded_at + interval '3 hours')
-                    -
-                    (SELECT value FROM glucose_readings g
-                     WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at - interval '30 min' AND m.recorded_at
-                     ORDER BY g.recorded_at DESC LIMIT 1) AS delta
+             SELECT m.foods, peak.max_val - pre.value AS delta
              FROM meals m
+             LEFT JOIN LATERAL (
+                 SELECT value FROM glucose_readings g
+                 WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at - interval '30 min' AND m.recorded_at
+                 ORDER BY g.recorded_at DESC LIMIT 1
+             ) pre ON true
+             LEFT JOIN LATERAL (
+                 SELECT MAX(value) AS max_val FROM glucose_readings g
+                 WHERE g.user_id = m.user_id AND g.recorded_at BETWEEN m.recorded_at AND m.recorded_at + interval '3 hours'
+             ) peak ON true
              WHERE m.user_id = $1::uuid AND m.recorded_at >= CURRENT_DATE - $2::int * interval '1 day'
            )
            SELECT food, AVG(delta)::double precision AS avg_delta, COUNT(*) AS occurrences

@@ -17,15 +17,15 @@ async def export_csv(
     from_date: date = Query(None),
     to_date: date = Query(None),
 ):
-    date_filter = ""
+    clauses = []
     params = [user_id]
     if from_date:
-        date_filter += " AND recorded_at::date >= $2"
         params.append(from_date)
+        clauses.append(f"AND recorded_at::date >= ${len(params)}")
     if to_date:
-        idx = len(params) + 1
-        date_filter += f" AND recorded_at::date <= ${idx}"
         params.append(to_date)
+        clauses.append(f"AND recorded_at::date <= ${len(params)}")
+    date_filter = " ".join(clauses)
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -33,7 +33,7 @@ async def export_csv(
     writer.writerow(["--- Glucose Readings ---"])
     writer.writerow(["Date", "Value (mg/dL)", "Timing"])
     rows = await db.fetch(
-        f"SELECT value, timing, recorded_at FROM glucose_readings WHERE user_id = $1::uuid{date_filter} ORDER BY recorded_at",
+        f"SELECT value, timing, recorded_at FROM glucose_readings WHERE user_id = $1::uuid {date_filter} ORDER BY recorded_at",
         *params,
     )
     for r in rows:
@@ -44,7 +44,7 @@ async def export_csv(
     writer.writerow(["--- Meals ---"])
     writer.writerow(["Date", "Type", "Foods", "Notes"])
     rows = await db.fetch(
-        f"SELECT meal_type, foods, notes, recorded_at FROM meals WHERE user_id = $1::uuid{date_filter} ORDER BY recorded_at",
+        f"SELECT meal_type, foods, notes, recorded_at FROM meals WHERE user_id = $1::uuid {date_filter} ORDER BY recorded_at",
         *params,
     )
     for r in rows:
@@ -55,7 +55,7 @@ async def export_csv(
     writer.writerow(["--- Activities ---"])
     writer.writerow(["Date", "Type", "Duration (min)", "Intensity"])
     rows = await db.fetch(
-        f"SELECT activity_type, duration, intensity, recorded_at FROM activities WHERE user_id = $1::uuid{date_filter} ORDER BY recorded_at",
+        f"SELECT activity_type, duration, intensity, recorded_at FROM activities WHERE user_id = $1::uuid {date_filter} ORDER BY recorded_at",
         *params,
     )
     for r in rows:
@@ -66,7 +66,7 @@ async def export_csv(
     writer.writerow(["--- Sleep ---"])
     writer.writerow(["Date", "Hours", "Quality"])
     rows = await db.fetch(
-        f"SELECT hours, quality, recorded_at FROM sleep_entries WHERE user_id = $1::uuid{date_filter} ORDER BY recorded_at",
+        f"SELECT hours, quality, recorded_at FROM sleep_entries WHERE user_id = $1::uuid {date_filter} ORDER BY recorded_at",
         *params,
     )
     for r in rows:
@@ -77,7 +77,7 @@ async def export_csv(
     writer.writerow(["--- Medications ---"])
     writer.writerow(["Date", "Name", "Dose", "Unit", "Timing", "Notes"])
     rows = await db.fetch(
-        f"SELECT name, dose_value, dose_unit, timing, notes, recorded_at FROM medications WHERE user_id = $1::uuid{date_filter} ORDER BY recorded_at",
+        f"SELECT name, dose_value, dose_unit, timing, notes, recorded_at FROM medications WHERE user_id = $1::uuid {date_filter} ORDER BY recorded_at",
         *params,
     )
     for r in rows:

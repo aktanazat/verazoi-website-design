@@ -1,8 +1,13 @@
+import logging
 import time
+
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.redis_client import get_redis
 from app.config import settings
+
+log = logging.getLogger("verazoi.ratelimit")
 
 RATE_LIMIT_SCRIPT = """
 local current = redis.call('INCR', KEYS[1])
@@ -32,6 +37,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             r = await get_redis()
             current = await r.eval(RATE_LIMIT_SCRIPT, 1, key)
             if current > limit:
+                log.warning("Rate limit exceeded: ip=%s count=%d limit=%d", client_ip, current, limit)
                 raise HTTPException(
                     status_code=429,
                     detail=f"Rate limit exceeded. Max {limit} requests per minute.",

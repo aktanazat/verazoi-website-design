@@ -5,7 +5,7 @@ import { useAppData } from "@/contexts/app-data-context"
 
 export function StabilityScore() {
   const { state } = useAppData()
-  const score = state.stabilityScore
+  const score = state.stability?.score ?? 0
   const [displayed, setDisplayed] = useState(0)
 
   useEffect(() => {

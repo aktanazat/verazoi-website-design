@@ -49,7 +49,7 @@ actor HealthKitManager {
     func fetchLastSleep() async -> (hours: Double, quality: String)? {
         let type = HKCategoryType(.sleepAnalysis)
         let now = Date()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now) else { return nil }
         let predicate = HKQuery.predicateForSamples(withStart: yesterday, end: now, options: .strictEndDate)
         let descriptor = HKSampleQueryDescriptor(predicates: [.categorySample(type: type, predicate: predicate)], sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)], limit: 20)
 
@@ -79,7 +79,7 @@ actor HealthKitManager {
     private func fetchLatestQuantity(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> Double? {
         let type = HKQuantityType(identifier)
         let now = Date()
-        let dayAgo = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        guard let dayAgo = Calendar.current.date(byAdding: .day, value: -1, to: now) else { return nil }
         let predicate = HKQuery.predicateForSamples(withStart: dayAgo, end: now, options: .strictEndDate)
         let descriptor = HKSampleQueryDescriptor(predicates: [.quantitySample(type: type, predicate: predicate)], sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)], limit: 1)
 

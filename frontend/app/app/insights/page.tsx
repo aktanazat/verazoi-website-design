@@ -7,11 +7,6 @@ import {
   type InsightResponse,
 } from "@/lib/api"
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("verazoi_token")
-}
-
 function isInsight(data: InsightResponse | { status: string }): data is InsightResponse {
   return "summary" in data
 }
@@ -23,35 +18,27 @@ export default function InsightsPage() {
   const [generating, setGenerating] = useState(false)
 
   const fetchData = useCallback(async () => {
-    const token = getToken()
-    if (!token) { setLoading(false); return }
     try {
       const [weekly, hist] = await Promise.all([
-        getWeeklyInsight(token),
-        getInsightHistory(token),
+        getWeeklyInsight(),
+        getInsightHistory(),
       ])
       if (isInsight(weekly)) setCurrent(weekly)
       setHistory(hist)
-    } catch {
-      // no data
-    }
+    } catch {}
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
 
   const handleGenerate = async () => {
-    const token = getToken()
-    if (!token) return
     setGenerating(true)
     try {
-      const insight = await generateWeeklyInsight(token)
+      const insight = await generateWeeklyInsight()
       setCurrent(insight)
-      const hist = await getInsightHistory(token)
+      const hist = await getInsightHistory()
       setHistory(hist)
-    } catch {
-      // generation failed
-    }
+    } catch {}
     setGenerating(false)
   }
 
