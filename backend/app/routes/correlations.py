@@ -31,17 +31,14 @@ async def meal_glucose(
            ORDER BY m.recorded_at DESC""",
         user_id, days,
     )
-    results = []
-    for r in rows:
-        pre = r["pre_glucose"]
-        peak = r["peak_glucose"]
-        delta = (peak - pre) if pre and peak else None
-        results.append(MealGlucoseCorrelation(
+    return [
+        MealGlucoseCorrelation(
             meal_id=str(r["meal_id"]), meal_type=r["meal_type"], foods=r["foods"],
-            recorded_at=r["recorded_at"], pre_meal_glucose=pre, peak_glucose=peak,
-            glucose_delta=delta,
-        ))
-    return results
+            recorded_at=r["recorded_at"], pre_meal_glucose=r["pre_glucose"], peak_glucose=r["peak_glucose"],
+            glucose_delta=(r["peak_glucose"] - r["pre_glucose"]) if r["pre_glucose"] and r["peak_glucose"] else None,
+        )
+        for r in rows
+    ]
 
 
 @router.get("/food-impact")

@@ -18,6 +18,9 @@ final class AppState {
     var stabilityTrend: [StabilityTrendPoint] = []
     var foodImpacts: [FoodImpact] = []
     var weeklyInsight: WeeklyInsight?
+    var fetchError: String?
+    var isLoadingTrends = false
+    var isLoadingFoodImpact = false
 
     weak var wearable: WearableState?
 
@@ -91,8 +94,48 @@ final class AppState {
         Task { try? await APIClient.shared.createMedication(name: name, doseValue: doseValue, doseUnit: doseUnit, timing: timing, notes: notes) }
     }
 
+    static func clearWidgetData() {
+        let defaults = UserDefaults(suiteName: "group.verazoi.app")
+        defaults?.removeObject(forKey: "widget_stability_score")
+        defaults?.removeObject(forKey: "widget_spike_risk")
+        defaults?.removeObject(forKey: "widget_last_glucose")
+        defaults?.removeObject(forKey: "widget_last_glucose_time")
+    }
+
+    private func removeTimelineEvent(type: EventType, at index: Int) {
+        let events = timeline.filter { $0.type == type }
+        if index < events.count {
+            timeline.removeAll { $0.id == events[index].id }
+        }
+    }
+
+    func deleteGlucoseReading(at index: Int) {
+        removeTimelineEvent(type: .glucose, at: index)
+        glucoseReadings.remove(at: index)
+        recalcScore()
+    }
+
+    func deleteActivity(at index: Int) {
+        removeTimelineEvent(type: .activity, at: index)
+        activities.remove(at: index)
+        recalcScore()
+    }
+
+    func deleteSleep(at index: Int) {
+        removeTimelineEvent(type: .sleep, at: index)
+        sleepEntries.remove(at: index)
+        recalcScore()
+    }
+
+    func deleteMedication(at index: Int) {
+        removeTimelineEvent(type: .medication, at: index)
+        medications.remove(at: index)
+        recalcScore()
+    }
+
     func fetchFromBackend() async {
         isSyncing = true
+        fetchError = nil
         do {
             async let glucoseTask = APIClient.shared.listGlucose()
             async let mealsTask = APIClient.shared.listMeals()
@@ -130,12 +173,14 @@ final class AppState {
             goals = UserGoals(glucoseLow: remoteGoals.glucoseLow, glucoseHigh: remoteGoals.glucoseHigh, dailySteps: remoteGoals.dailySteps, sleepHours: remoteGoals.sleepHours)
             goalProgress = GoalProgress(glucoseInRangePct: remoteProgress.glucoseInRangePct, stepsToday: remoteProgress.stepsToday, stepsTarget: remoteProgress.stepsTarget, sleepLast: remoteProgress.sleepLast, sleepTarget: remoteProgress.sleepTarget)
         } catch {
+            fetchError = "Could not load data. Pull down to retry."
             recalcScore()
         }
         isSyncing = false
     }
 
     func fetchTrends(days: Int = 7) async {
+        isLoadingTrends = true
         do {
             async let gt = APIClient.shared.getGlucoseTrend(days: days)
             async let st = APIClient.shared.getStabilityTrend(days: days)
@@ -143,13 +188,16 @@ final class AppState {
             glucoseTrend = glucoseT.map { GlucoseTrendPoint(date: $0.date, avg: $0.avg, min: $0.min, max: $0.max) }
             stabilityTrend = stabilityT.map { StabilityTrendPoint(date: $0.date, score: $0.score) }
         } catch {}
+        isLoadingTrends = false
     }
 
     func fetchFoodImpact() async {
+        isLoadingFoodImpact = true
         do {
             let impacts = try await APIClient.shared.getFoodImpact()
             foodImpacts = impacts.map { FoodImpact(food: $0.food, avgDelta: $0.avgDelta, occurrences: $0.occurrences) }
         } catch {}
+        isLoadingFoodImpact = false
     }
 
     func fetchInsight() async {

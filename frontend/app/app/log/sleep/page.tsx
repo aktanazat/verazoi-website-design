@@ -68,20 +68,24 @@ export default function SleepLogPage() {
         </div>
 
         <div className="border border-border p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Recent sleep</p>
-            <p className="text-[12px] text-muted-foreground/80">
-              {state.timeline.filter((e) => e.type === "sleep").length} logged
-            </p>
-          </div>
-          <div className="mt-4">
-            {state.timeline.filter((e) => e.type === "sleep").length === 0 ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <p className="text-[13px] text-muted-foreground/60">No sleep logged</p>
-                <p className="mt-1.5 text-[12px] text-muted-foreground/40">Log your sleep to track rest and recovery.</p>
-              </div>
-            ) : (
-              state.timeline.filter((e) => e.type === "sleep").map((e, i) => (
+          {(() => {
+            const sleepEntries = state.timeline.filter((e) => e.type === "sleep")
+            return (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Recent sleep</p>
+                  <p className="text-[12px] text-muted-foreground/80">
+                    {sleepEntries.length} logged
+                  </p>
+                </div>
+                <div className="mt-4">
+                  {sleepEntries.length === 0 ? (
+                    <div className="flex flex-col items-center py-8 text-center">
+                      <p className="text-[13px] text-muted-foreground/60">No sleep logged</p>
+                      <p className="mt-1.5 text-[12px] text-muted-foreground/40">Log your sleep to track rest and recovery.</p>
+                    </div>
+                  ) : (
+                    sleepEntries.map((e, i) => (
                 <div key={i} className="flex items-center justify-between border-b border-border py-3 last:border-0">
                   <div>
                     <p className="text-[13px] text-foreground">{e.label}</p>
@@ -89,9 +93,12 @@ export default function SleepLogPage() {
                   </div>
                   <span className="text-[11px] text-muted-foreground/70">{formatTime(e.recorded_at)}</span>
                 </div>
-              ))
-            )}
-          </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )
+          })()}
         </div>
       </div>
     </>

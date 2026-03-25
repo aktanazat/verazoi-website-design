@@ -14,7 +14,6 @@ async def start_fast(
     user_id: str = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db),
 ):
-    # End any active fast
     await db.execute(
         "UPDATE fasting_sessions SET ended_at = now() WHERE user_id = $1::uuid AND ended_at IS NULL",
         user_id,
@@ -69,7 +68,6 @@ async def get_active_fast(
 
     elapsed = (datetime.now(timezone.utc) - row["started_at"]).total_seconds() / 3600
 
-    # Get glucose readings during this fast
     glucose = await db.fetch(
         """SELECT id::text, value, timing, recorded_at FROM glucose_readings
            WHERE user_id = $1::uuid AND recorded_at >= $2 ORDER BY recorded_at""",

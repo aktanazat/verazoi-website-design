@@ -8,6 +8,7 @@ final class AuthState {
     var email: String?
     var isLoading = false
     var error: String?
+    var sessionExpired = false
 
     private let tokenKey = "verazoi_token"
     private let emailKey = "verazoi_email"
@@ -18,6 +19,14 @@ final class AuthState {
             email = UserDefaults.standard.string(forKey: emailKey)
             isAuthenticated = true
             Task { await APIClient.shared.setToken(saved) }
+        }
+        Task {
+            await APIClient.shared.setSessionExpiredHandler { [weak self] in
+                Task { @MainActor in
+                    self?.sessionExpired = true
+                    self?.logout()
+                }
+            }
         }
     }
 
@@ -63,6 +72,18 @@ final class AuthState {
         isLoading = false
     }
 
+    func forgotPassword(email: String) async {
+        isLoading = true
+        error = nil
+        do {
+            try await APIClient.shared.forgotPassword(email: email)
+            self.error = "If an account exists, a reset link was sent."
+        } catch {
+            self.error = "Could not send reset email. Try again."
+        }
+        isLoading = false
+    }
+
     func logout() {
         Task { await APIClient.shared.logout() }
         token = nil
@@ -70,6 +91,7 @@ final class AuthState {
         isAuthenticated = false
         UserDefaults.standard.removeObject(forKey: tokenKey)
         UserDefaults.standard.removeObject(forKey: emailKey)
+        AppState.clearWidgetData()
     }
 
     func handleAuthError() {

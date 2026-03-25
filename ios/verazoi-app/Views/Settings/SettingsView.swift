@@ -38,6 +38,7 @@ struct SettingsView: View {
 
 private struct AccountCard: View {
     @Environment(AuthState.self) private var auth
+    @State private var showLogoutConfirmation = false
 
     var body: some View {
         VCard {
@@ -52,7 +53,7 @@ private struct AccountCard: View {
                 }
 
                 Button {
-                    auth.logout()
+                    showLogoutConfirmation = true
                 } label: {
                     Text("Sign out")
                         .font(.system(size: 12, weight: .medium))
@@ -66,6 +67,11 @@ private struct AccountCard: View {
                         )
                 }
                 .padding(.top, 16)
+                .confirmationDialog("Sign out of Verazoi?", isPresented: $showLogoutConfirmation, titleVisibility: .visible) {
+                    Button("Sign out", role: .destructive) {
+                        auth.logout()
+                    }
+                }
             }
         }
     }
@@ -88,6 +94,7 @@ private struct WearableConnectionCard: View {
                                     ? Color.vPrimary
                                     : Color.vMutedForeground.opacity(0.8)
                             )
+                            .accessibilityLabel("Wearable status: \(wearable.connectionStatus.rawValue)")
                     }
                     Spacer()
                     if let provider = wearable.connectedProvider {

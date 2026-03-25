@@ -15,6 +15,33 @@ struct DashboardView: View {
                         .foregroundStyle(Color.vForeground)
                         .padding(.top, 12)
 
+                    if let error = state.fetchError {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 12))
+                            Text(error)
+                                .font(.system(size: 12))
+                        }
+                        .foregroundStyle(Color.vAmber)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.vAmber.opacity(0.08))
+                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vAmber.opacity(0.2), lineWidth: 0.5))
+                        .padding(.top, 12)
+                    }
+
+                    if state.isSyncing {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(Color.vMutedForeground)
+                            Text("Loading data...")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.vMutedForeground)
+                        }
+                        .padding(.top, 12)
+                    }
+
                     VStack(spacing: 16) {
                         StabilityScoreView(score: state.stabilityScore, readings: state.glucoseReadings)
                         SpikeRiskView()
@@ -39,6 +66,9 @@ struct DashboardView: View {
                 .padding(.bottom, 32)
             }
             .background(Color.vBackground)
+            .refreshable {
+                await state.fetchFromBackend()
+            }
         }
     }
 }

@@ -6,13 +6,24 @@ struct GlucoseLogView: View {
     @State private var timing: GlucoseTiming = .fasting
     @State private var saved = false
 
+    private var parsedValue: Int? {
+        guard let v = Int(glucoseValue), v >= 30, v <= 500 else { return nil }
+        return v
+    }
+
+    private var validationHint: String? {
+        guard !glucoseValue.isEmpty, let v = Int(glucoseValue) else { return nil }
+        if v < 30 || v > 500 { return "Value must be 30-500 mg/dL" }
+        return nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
                     Button {
-                        guard let value = Int(glucoseValue) else { return }
+                        guard let value = parsedValue else { return }
                         state.addGlucoseReading(value: value, timing: timing)
                         saved = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -26,9 +37,9 @@ struct GlucoseLogView: View {
                             .foregroundStyle(Color.vBackground)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 10)
-                            .background(glucoseValue.isEmpty ? Color.vForeground.opacity(0.3) : Color.vForeground)
+                            .background(parsedValue != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(glucoseValue.isEmpty)
+                    .disabled(parsedValue == nil)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
@@ -48,6 +59,13 @@ struct GlucoseLogView: View {
                                     .foregroundStyle(Color.vMutedForeground)
                             }
                             .padding(.top, 16)
+
+                            if let hint = validationHint {
+                                Text(hint)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.vAmber)
+                                    .padding(.top, 4)
+                            }
 
                             VLabelText(text: "Timing")
                                 .padding(.top, 20)
@@ -104,11 +122,19 @@ struct GlucoseLogView: View {
                                                 Text("\(reading.value)")
                                                     .font(.vSerif(20))
                                                     .foregroundStyle(Color.vForeground)
+                                                    .accessibilityLabel("\(reading.value) milligrams per deciliter")
                                             }
                                             Spacer()
                                             TrendIcon(reading: reading, previous: index > 0 ? state.glucoseReadings[index - 1] : nil)
                                         }
                                         .padding(.vertical, 12)
+                                        .contextMenu {
+                                            Button(role: .destructive) {
+                                                state.deleteGlucoseReading(at: index)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
 
                                         if index < state.glucoseReadings.count - 1 {
                                             Divider().foregroundStyle(Color.vBorder)
@@ -147,5 +173,6 @@ private struct TrendIcon: View {
                 trend == "down" ? Color(red: 0.2, green: 0.5, blue: 0.3).opacity(0.6) :
                 Color.vMutedForeground.opacity(0.6)
             )
+            .accessibilityLabel(trend == "up" ? "Trending up" : trend == "down" ? "Trending down" : "Stable")
     }
 }

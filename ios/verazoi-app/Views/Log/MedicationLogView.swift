@@ -11,8 +11,19 @@ struct MedicationLogView: View {
     @State private var notes = ""
     @State private var saved = false
 
+    private var parsedDose: Double? {
+        guard let d = Double(doseValue), d > 0, d <= 5000 else { return nil }
+        return d
+    }
+
+    private var validationHint: String? {
+        guard !doseValue.isEmpty, let d = Double(doseValue) else { return nil }
+        if d <= 0 || d > 5000 { return "Dose must be between 0 and 5000" }
+        return nil
+    }
+
     private var canSave: Bool {
-        !name.isEmpty && !doseValue.isEmpty
+        !name.isEmpty && parsedDose != nil
     }
 
     var body: some View {
@@ -21,7 +32,7 @@ struct MedicationLogView: View {
                 HStack {
                     Spacer()
                     Button {
-                        guard let dose = Double(doseValue) else { return }
+                        guard let dose = parsedDose else { return }
                         state.addMedication(name: name, doseValue: dose, doseUnit: doseUnit, timing: timing.rawValue, notes: notes)
                         saved = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -72,6 +83,13 @@ struct MedicationLogView: View {
                                 }
                             }
                             .padding(.top, 8)
+
+                            if let hint = validationHint {
+                                Text(hint)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.vAmber)
+                                    .padding(.top, 4)
+                            }
 
                             VLabelText(text: "Timing")
                                 .padding(.top, 20)
@@ -136,6 +154,13 @@ struct MedicationLogView: View {
                                                 .foregroundStyle(Color.vMutedForeground.opacity(0.7))
                                         }
                                         .padding(.vertical, 12)
+                                        .contextMenu {
+                                            Button(role: .destructive) {
+                                                state.deleteMedication(at: index)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
 
                                         if index < medEvents.count - 1 {
                                             Divider().foregroundStyle(Color.vBorder)

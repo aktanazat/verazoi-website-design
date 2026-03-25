@@ -4,10 +4,7 @@ struct FastingView: View {
     @State private var isActive = false
     @State private var startedAt: Date?
     @State private var targetHours: Double = 16
-    @State private var elapsedHours: Double = 0
     @State private var history: [(id: String, started: String, elapsed: Double, target: Double?)] = []
-    @State private var timer: Timer?
-
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -16,32 +13,35 @@ struct FastingView: View {
                         VLabelText(text: "Fasting Timer")
 
                         if isActive, let startedAt {
-                            Text(formatElapsed(elapsedHours))
-                                .font(.vSerif(48))
-                                .foregroundStyle(Color.vForeground)
-                                .monospacedDigit()
-                                .padding(.top, 20)
+                            TimelineView(.periodic(from: .now, by: 60)) { context in
+                                let elapsed = context.date.timeIntervalSince(startedAt) / 3600
+                                Text(formatElapsed(elapsed))
+                                    .font(.vSerif(48))
+                                    .foregroundStyle(Color.vForeground)
+                                    .monospacedDigit()
 
-                            if targetHours > 0 {
-                                let progress = min(elapsedHours / targetHours, 1.0)
-                                GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
-                                        Rectangle()
-                                            .fill(Color.vBorder)
-                                            .frame(height: 4)
-                                        Rectangle()
-                                            .fill(Color.vPrimary)
-                                            .frame(width: geo.size.width * progress, height: 4)
+                                if targetHours > 0 {
+                                    let progress = min(elapsed / targetHours, 1.0)
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            Rectangle()
+                                                .fill(Color.vBorder)
+                                                .frame(height: 4)
+                                            Rectangle()
+                                                .fill(Color.vPrimary)
+                                                .frame(width: geo.size.width * progress, height: 4)
+                                        }
                                     }
-                                }
-                                .frame(height: 4)
-                                .padding(.top, 16)
+                                    .frame(height: 4)
+                                    .padding(.top, 16)
 
-                                Text("\(Int(targetHours))h target")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(Color.vMutedForeground)
-                                    .padding(.top, 8)
+                                    Text("\(Int(targetHours))h target")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Color.vMutedForeground)
+                                        .padding(.top, 8)
+                                }
                             }
+                            .padding(.top, 20)
 
                             Text("Started \(startedAt.formatted(date: .omitted, time: .shortened))")
                                 .font(.system(size: 12))
@@ -145,7 +145,6 @@ struct FastingView: View {
             if session != nil {
                 startedAt = Date()
                 isActive = true
-                startTimer()
             }
         }
     }
@@ -154,34 +153,18 @@ struct FastingView: View {
         Task {
             _ = try? await APIClient.shared.endFast()
             isActive = false
-            timer?.invalidate()
-            timer = nil
             await loadState()
         }
     }
 
-    private func startTimer() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
-            if let s = startedAt {
-                elapsedHours = Date().timeIntervalSince(s) / 3600
-            }
-        }
-    }
-
     private func loadState() async {
-        // Check for active fast
         if let active = try? await APIClient.shared.getActiveFast() {
             isActive = true
-            elapsedHours = active.elapsedHours
             targetHours = active.targetHours ?? 16
-            // Parse startedAt from ISO string
             let formatter = ISO8601DateFormatter()
             startedAt = formatter.date(from: active.startedAt)
-            startTimer()
         }
 
-        // Load history
         let sessions = (try? await APIClient.shared.fastingHistory()) ?? []
         history = sessions.map { s in
             (id: s.id, started: s.startedAt, elapsed: s.elapsedHours, target: s.targetHours)

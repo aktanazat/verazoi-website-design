@@ -5,6 +5,8 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isRegistering = false
+    @State private var showForgotPassword = false
+    @State private var resetEmail = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -89,6 +91,18 @@ struct LoginView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(Color.vPrimary)
                 }
+
+                if !isRegistering {
+                    Button {
+                        resetEmail = email
+                        showForgotPassword = true
+                    } label: {
+                        Text("Forgot password?")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.vMutedForeground)
+                    }
+                    .padding(.top, 4)
+                }
             }
             .padding(.top, 48)
             .padding(.horizontal, 32)
@@ -97,6 +111,17 @@ struct LoginView: View {
             Spacer()
         }
         .background(Color.vBackground)
+        .alert("Reset password", isPresented: $showForgotPassword) {
+            TextField("Email", text: $resetEmail)
+                .textContentType(.emailAddress)
+                .textInputAutocapitalization(.never)
+            Button("Send reset link") {
+                Task { await auth.forgotPassword(email: resetEmail) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Enter your email to receive a password reset link.")
+        }
     }
 
     private var isFormValid: Bool {

@@ -39,16 +39,23 @@ struct InsightView: View {
                                     isGenerating = false
                                 }
                             } label: {
-                                Text(isGenerating ? "Generating..." : "Regenerate")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .tracking(0.4)
-                                    .foregroundStyle(Color.vMutedForeground)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 0)
-                                            .stroke(Color.vBorder, lineWidth: 0.5)
-                                    )
+                                HStack(spacing: 8) {
+                                    if isGenerating {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                            .tint(Color.vMutedForeground)
+                                    }
+                                    Text(isGenerating ? "Generating..." : "Regenerate")
+                                }
+                                .font(.system(size: 12, weight: .medium))
+                                .tracking(0.4)
+                                .foregroundStyle(Color.vMutedForeground)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 0)
+                                        .stroke(Color.vBorder, lineWidth: 0.5)
+                                )
                             }
                             .disabled(isGenerating)
                             .padding(.top, 20)

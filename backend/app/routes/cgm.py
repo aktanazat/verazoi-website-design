@@ -55,16 +55,13 @@ async def sync_cgm(
         inserted = 0
         for r in readings:
             dt = datetime.fromtimestamp(r["epoch_ms"] / 1000, tz=timezone.utc)
-            try:
-                await db.execute(
-                    """INSERT INTO glucose_readings (user_id, value, timing, recorded_at)
-                       VALUES ($1::uuid, $2, 'cgm', $3)
-                       ON CONFLICT DO NOTHING""",
-                    user_id, r["value"], dt,
-                )
-                inserted += 1
-            except Exception:
-                pass
+            await db.execute(
+                """INSERT INTO glucose_readings (user_id, value, timing, recorded_at)
+                   VALUES ($1::uuid, $2, 'cgm', $3)
+                   ON CONFLICT DO NOTHING""",
+                user_id, r["value"], dt,
+            )
+            inserted += 1
 
         await db.execute(
             "UPDATE cgm_connections SET last_sync = now() WHERE user_id = $1::uuid AND provider = 'dexcom'",

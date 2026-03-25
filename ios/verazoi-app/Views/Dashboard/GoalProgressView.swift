@@ -69,6 +69,8 @@ private struct ProgressRow: View {
                 }
             }
             .frame(height: 4)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(label): \(current), \(Int(clampedFraction * 100)) percent")
         }
     }
 }

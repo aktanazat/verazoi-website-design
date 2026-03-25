@@ -20,7 +20,6 @@ async def sync_wearable(
         user_id, body.heart_rate, body.steps, body.active_minutes, body.sleep_hours, body.sleep_quality,
     )
 
-    # Invalidate stability cache
     try:
         r = await get_redis()
         await r.delete(f"stability:{user_id}")

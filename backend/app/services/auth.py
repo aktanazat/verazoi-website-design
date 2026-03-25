@@ -56,7 +56,7 @@ def decode_token(token: str) -> str:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         user_id: str = payload.get("sub")
         token_type: str = payload.get("type", "access")
-        if user_id is None or token_type != "access":
+        if not user_id or token_type != "access":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
         return user_id
     except JWTError:

@@ -7,6 +7,9 @@ struct MedScheduleView: View {
     @State private var doseValue = ""
     @State private var doseUnit = "mg"
     @State private var scheduleTime = Date()
+    @State private var selectedDays: Set<Int> = [0, 1, 2, 3, 4, 5, 6]
+
+    private static let dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     var body: some View {
         VCard {
@@ -46,6 +49,29 @@ struct MedScheduleView: View {
                         DatePicker("Time", selection: $scheduleTime, displayedComponents: .hourAndMinute)
                             .font(.system(size: 13))
                             .foregroundStyle(Color.vForeground)
+
+                        VLabelText(text: "Days")
+                            .padding(.top, 4)
+
+                        HStack(spacing: 4) {
+                            ForEach(0..<7, id: \.self) { day in
+                                Button {
+                                    if selectedDays.contains(day) {
+                                        selectedDays.remove(day)
+                                    } else {
+                                        selectedDays.insert(day)
+                                    }
+                                } label: {
+                                    Text(Self.dayLabels[day])
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(selectedDays.contains(day) ? Color.vPrimaryForeground : Color.vMutedForeground)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 6)
+                                        .background(selectedDays.contains(day) ? Color.vForeground : Color.clear)
+                                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                }
+                            }
+                        }
 
                         Button {
                             addSchedule()
@@ -114,7 +140,7 @@ struct MedScheduleView: View {
         Task {
             _ = try? await APIClient.shared.createMedSchedule(
                 name: name, doseValue: Double(doseValue) ?? 0, doseUnit: doseUnit,
-                time: timeStr, days: [0, 1, 2, 3, 4, 5, 6]
+                time: timeStr, days: Array(selectedDays).sorted()
             )
             name = ""; doseValue = ""; showAdd = false
             await load()

@@ -11,10 +11,17 @@ struct ContentView: View {
     @State private var appState = AppState()
     @State private var wearableState = WearableState()
     @State private var authState = AuthState()
+    @AppStorage("verazoi_onboarding_complete") private var onboardingComplete = false
 
     var body: some View {
         Group {
-            if authState.isAuthenticated {
+            if !onboardingComplete {
+                OnboardingView {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        onboardingComplete = true
+                    }
+                }
+            } else if authState.isAuthenticated {
                 TabView(selection: $selectedTab) {
                     Tab("Dashboard", systemImage: "chart.bar", value: .dashboard) {
                         DashboardView()

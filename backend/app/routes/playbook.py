@@ -38,20 +38,19 @@ async def get_playbook(
         user_id, food_list,
     )
 
-    results = []
-    for r in rows:
-        delta = round(r["avg_delta"], 1)
-        suggestion = None
+    def _suggestion(delta):
         if delta > 30:
-            suggestion = "A 15-min walk before or after eating typically reduces this spike."
-        elif delta > 15:
-            suggestion = "Pairing with protein or fiber may blunt the glucose response."
+            return "A 15-min walk before or after eating typically reduces this spike."
+        if delta > 15:
+            return "Pairing with protein or fiber may blunt the glucose response."
+        return None
 
-        results.append(PlaybookEntry(
+    return [
+        PlaybookEntry(
             food=r["food"],
-            avg_delta=delta,
+            avg_delta=round(r["avg_delta"], 1),
             occurrences=r["occurrences"],
-            suggestion=suggestion,
-        ))
-
-    return results
+            suggestion=_suggestion(round(r["avg_delta"], 1)),
+        )
+        for r in rows
+    ]

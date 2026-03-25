@@ -93,20 +93,24 @@ export default function ActivityLogPage() {
         </div>
 
         <div className="border border-border p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Recent activity</p>
-            <p className="text-[12px] text-muted-foreground/80">
-              {state.timeline.filter((e) => e.type === "activity").length} logged
-            </p>
-          </div>
-          <div className="mt-4">
-            {state.timeline.filter((e) => e.type === "activity").length === 0 ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <p className="text-[13px] text-muted-foreground/60">No activity logged</p>
-                <p className="mt-1.5 text-[12px] text-muted-foreground/40">Log a walk, run, or workout to track your movement.</p>
-              </div>
-            ) : (
-              state.timeline.filter((e) => e.type === "activity").map((e, i) => (
+          {(() => {
+            const activityEntries = state.timeline.filter((e) => e.type === "activity")
+            return (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] uppercase tracking-[0.15em] text-muted-foreground">Recent activity</p>
+                  <p className="text-[12px] text-muted-foreground/80">
+                    {activityEntries.length} logged
+                  </p>
+                </div>
+                <div className="mt-4">
+                  {activityEntries.length === 0 ? (
+                    <div className="flex flex-col items-center py-8 text-center">
+                      <p className="text-[13px] text-muted-foreground/60">No activity logged</p>
+                      <p className="mt-1.5 text-[12px] text-muted-foreground/40">Log a walk, run, or workout to track your movement.</p>
+                    </div>
+                  ) : (
+                    activityEntries.map((e, i) => (
                 <div key={i} className="flex items-center justify-between border-b border-border py-3 last:border-0">
                   <div>
                     <p className="text-[13px] text-foreground">{e.label}</p>
@@ -114,9 +118,12 @@ export default function ActivityLogPage() {
                   </div>
                   <span className="text-[11px] text-muted-foreground/70">{formatTime(e.recorded_at)}</span>
                 </div>
-              ))
-            )}
-          </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )
+          })()}
         </div>
       </div>
     </>

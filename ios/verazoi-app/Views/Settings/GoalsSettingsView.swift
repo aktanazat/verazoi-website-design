@@ -8,6 +8,10 @@ struct GoalsSettingsCard: View {
     @State private var sleepHours: Double = 8
     @State private var saving = false
 
+    private var rangeInvalid: Bool {
+        glucoseLow >= glucoseHigh
+    }
+
     var body: some View {
         VCard {
             VStack(alignment: .leading, spacing: 0) {
@@ -29,6 +33,13 @@ struct GoalsSettingsCard: View {
                         .foregroundStyle(Color.vForeground)
                 }
                 .padding(.top, 8)
+
+                if rangeInvalid {
+                    Text("Low must be less than high")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.top, 4)
+                }
 
                 VLabelText(text: "Daily steps")
                     .padding(.top, 20)
@@ -70,9 +81,9 @@ struct GoalsSettingsCard: View {
                         .foregroundStyle(Color.vBackground)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(saving ? Color.vForeground.opacity(0.3) : Color.vForeground)
+                        .background(saving || rangeInvalid ? Color.vForeground.opacity(0.3) : Color.vForeground)
                 }
-                .disabled(saving)
+                .disabled(saving || rangeInvalid)
                 .padding(.top, 20)
             }
         }

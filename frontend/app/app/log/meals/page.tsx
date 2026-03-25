@@ -122,9 +122,7 @@ export default function MealsLogPage() {
                     if (!file) return
                     setRecognizing(true)
                     const foods = await api.recognizeFood(file).catch(() => [])
-                    for (const food of foods) {
-                      if (!selected.includes(food)) setSelected((prev) => [...prev, food])
-                    }
+                    setSelected((prev) => [...new Set([...prev, ...foods])])
                     setRecognizing(false)
                     e.target.value = ""
                   }}

@@ -1,4 +1,5 @@
 import base64
+import json
 import anthropic
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from app.config import settings
@@ -41,9 +42,7 @@ async def recognize_food(
         }],
     )
 
-    import json
     raw = response.content[0].text.strip()
-    # Strip markdown fences if present
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 

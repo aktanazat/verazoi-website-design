@@ -22,7 +22,12 @@ struct FoodImpactView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         VLabelText(text: "Glucose response by food")
 
-                        if state.foodImpacts.isEmpty {
+                        if state.isLoadingFoodImpact {
+                            ProgressView()
+                                .tint(Color.vMutedForeground)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 32)
+                        } else if state.foodImpacts.isEmpty {
                             VStack(spacing: 6) {
                                 Text("No food impact data")
                                     .font(.system(size: 13))

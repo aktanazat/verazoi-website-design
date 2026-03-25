@@ -34,7 +34,12 @@ struct TrendsView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             VLabelText(text: "Glucose Trend")
 
-                            if state.glucoseTrend.isEmpty {
+                            if state.isLoadingTrends {
+                                ProgressView()
+                                    .tint(Color.vMutedForeground)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 32)
+                            } else if state.glucoseTrend.isEmpty {
                                 Text("No trend data available")
                                     .font(.system(size: 13))
                                     .foregroundStyle(Color.vMutedForeground.opacity(0.6))
@@ -82,7 +87,12 @@ struct TrendsView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             VLabelText(text: "Stability Score")
 
-                            if state.stabilityTrend.isEmpty {
+                            if state.isLoadingTrends {
+                                ProgressView()
+                                    .tint(Color.vMutedForeground)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 32)
+                            } else if state.stabilityTrend.isEmpty {
                                 Text("No stability data available")
                                     .font(.system(size: 13))
                                     .foregroundStyle(Color.vMutedForeground.opacity(0.6))

@@ -14,14 +14,14 @@ struct DailyTimelineView: View {
                 }
 
                 if events.isEmpty {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 12) {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 20, weight: .light))
                             .foregroundStyle(Color.vMutedForeground.opacity(0.4))
                         Text("No entries yet")
                             .font(.system(size: 13))
                             .foregroundStyle(Color.vMutedForeground.opacity(0.6))
-                        Text("Log glucose, meals, activity, or sleep to see your day here.")
+                        Text("Switch to the Log tab to record glucose, meals, activity, or sleep.")
                             .font(.system(size: 12))
                             .foregroundStyle(Color.vMutedForeground.opacity(0.4))
                             .multilineTextAlignment(.center)

@@ -10,13 +10,24 @@ struct ActivityLogView: View {
     @State private var intensity = "Moderate"
     @State private var saved = false
 
+    private var parsedDuration: Int? {
+        guard let d = Int(duration), d >= 1, d <= 480 else { return nil }
+        return d
+    }
+
+    private var validationHint: String? {
+        guard !duration.isEmpty, let d = Int(duration) else { return nil }
+        if d < 1 || d > 480 { return "Duration must be 1-480 minutes" }
+        return nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
                     Button {
-                        guard let dur = Int(duration) else { return }
+                        guard let dur = parsedDuration else { return }
                         state.addActivity(activityType: actType, duration: dur, intensity: intensity)
                         saved = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -30,9 +41,9 @@ struct ActivityLogView: View {
                             .foregroundStyle(Color.vBackground)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 10)
-                            .background(duration.isEmpty ? Color.vForeground.opacity(0.3) : Color.vForeground)
+                            .background(parsedDuration != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(duration.isEmpty)
+                    .disabled(parsedDuration == nil)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
@@ -64,6 +75,13 @@ struct ActivityLogView: View {
                                     .foregroundStyle(Color.vMutedForeground)
                             }
                             .padding(.top, 8)
+
+                            if let hint = validationHint {
+                                Text(hint)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.vAmber)
+                                    .padding(.top, 4)
+                            }
 
                             VLabelText(text: "Intensity")
                                 .padding(.top, 20)
@@ -121,6 +139,13 @@ struct ActivityLogView: View {
                                                 .foregroundStyle(Color.vMutedForeground.opacity(0.7))
                                         }
                                         .padding(.vertical, 12)
+                                        .contextMenu {
+                                            Button(role: .destructive) {
+                                                state.deleteActivity(at: index)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
 
                                         if index < activityEvents.count - 1 {
                                             Divider().foregroundStyle(Color.vBorder)

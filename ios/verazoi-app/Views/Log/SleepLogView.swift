@@ -8,13 +8,24 @@ struct SleepLogView: View {
     @State private var sleepQuality = "good"
     @State private var saved = false
 
+    private var parsedHours: Double? {
+        guard let h = Double(sleepHours), h > 0, h <= 24 else { return nil }
+        return (h * 10).rounded() / 10
+    }
+
+    private var validationHint: String? {
+        guard !sleepHours.isEmpty, let h = Double(sleepHours) else { return nil }
+        if h <= 0 || h > 24 { return "Hours must be between 0 and 24" }
+        return nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
                     Button {
-                        guard let hours = Double(sleepHours) else { return }
+                        guard let hours = parsedHours else { return }
                         state.addSleep(hours: hours, quality: sleepQuality)
                         saved = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -28,9 +39,9 @@ struct SleepLogView: View {
                             .foregroundStyle(Color.vBackground)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 10)
-                            .background(sleepHours.isEmpty ? Color.vForeground.opacity(0.3) : Color.vForeground)
+                            .background(parsedHours != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(sleepHours.isEmpty)
+                    .disabled(parsedHours == nil)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
@@ -50,6 +61,13 @@ struct SleepLogView: View {
                                     .foregroundStyle(Color.vMutedForeground)
                             }
                             .padding(.top, 8)
+
+                            if let hint = validationHint {
+                                Text(hint)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.vAmber)
+                                    .padding(.top, 4)
+                            }
 
                             VLabelText(text: "Quality")
                                 .padding(.top, 20)
@@ -106,6 +124,13 @@ struct SleepLogView: View {
                                                 .foregroundStyle(Color.vMutedForeground.opacity(0.7))
                                         }
                                         .padding(.vertical, 12)
+                                        .contextMenu {
+                                            Button(role: .destructive) {
+                                                state.deleteSleep(at: index)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
 
                                         if index < sleepEvents.count - 1 {
                                             Divider().foregroundStyle(Color.vBorder)

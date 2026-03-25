@@ -19,6 +19,11 @@ actor APIClient {
     private var token: String?
     private var refreshToken: String?
     private var isRefreshing = false
+    private var onSessionExpired: (() -> Void)?
+
+    func setSessionExpiredHandler(_ handler: @escaping () -> Void) {
+        onSessionExpired = handler
+    }
 
     private let decoder: JSONDecoder = {
         let d = JSONDecoder()
@@ -67,10 +72,27 @@ actor APIClient {
     }
 
     private func attemptTokenRefresh() async -> Bool {
-        // Token refresh for iOS uses the stored refresh token
-        // The backend supports Bearer auth for mobile clients
-        // For now, signal that re-login is needed
-        return false
+        guard let refreshToken, !isRefreshing else { return false }
+        isRefreshing = true
+        defer { isRefreshing = false }
+
+        struct RefreshBody: Encodable { let refreshToken: String }
+        guard let url = URL(string: baseURL + "/auth/refresh") else { return false }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? encoder.encode(RefreshBody(refreshToken: refreshToken))
+
+        guard let (data, response) = try? await URLSession.shared.data(for: req),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let result = try? decoder.decode(TokenResponse.self, from: data) else {
+            onSessionExpired?()
+            return false
+        }
+
+        token = result.accessToken
+        return true
     }
 
     // MARK: - Auth
@@ -88,6 +110,12 @@ actor APIClient {
         let res: TokenResponse = try await request("POST", "/auth/login", body: AuthBody(email: email, password: password))
         token = res.accessToken
         return res.accessToken
+    }
+
+    struct ForgotPasswordBody: Encodable { let email: String }
+
+    func forgotPassword(email: String) async throws {
+        let _: [String: String] = try await request("POST", "/auth/forgot-password", body: ForgotPasswordBody(email: email))
     }
 
     func logout() async {

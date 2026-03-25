@@ -72,6 +72,8 @@ struct StabilityScoreView: View {
                             .monospacedDigit()
                             .offset(y: -2)
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Stability score: \(score) out of 100, \(label)")
                     Spacer()
                 }
                 .padding(.top, 24)

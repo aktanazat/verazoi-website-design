@@ -2,13 +2,13 @@ import SwiftUI
 
 struct SpikeRiskView: View {
     @Environment(AppState.self) private var state
-    @State private var expandedFactor: UUID?
+    @State private var expandedFactor: String?
 
     private var riskPercent: Int {
         if let result = state.stabilityResult {
             return Int((result.spikeRisk * 100).rounded())
         }
-        return 68
+        return 0
     }
 
     private var riskLevel: String {
@@ -17,15 +17,15 @@ struct SpikeRiskView: View {
         return "Low"
     }
 
+    private var hasData: Bool {
+        state.stabilityResult != nil
+    }
+
     private var displayFactors: [DisplayFactor] {
         if let result = state.stabilityResult, !result.spikeFactors.isEmpty {
             return result.spikeFactors.map { DisplayFactor(label: $0.label, impact: $0.impact, explanation: $0.explanation) }
         }
-        return [
-            DisplayFactor(label: "Late dinner (9:45 PM)", impact: "high", explanation: "Eating within 2 hours of sleep reduces glucose processing. Your post-meal reading was 156 mg/dL, 42% above your average dinner response."),
-            DisplayFactor(label: "Low sleep quality", impact: "moderate", explanation: "5.5 hours of sleep correlates with 15-20% reduced insulin sensitivity the following day based on your historical patterns."),
-            DisplayFactor(label: "No morning activity", impact: "moderate", explanation: "On days you walk before 10 AM, your fasting glucose averages 8 mg/dL lower. Today you skipped your usual routine."),
-        ]
+        return []
     }
 
     var body: some View {
@@ -39,73 +39,96 @@ struct SpikeRiskView: View {
                             .foregroundStyle(Color.vMutedForeground.opacity(0.8))
                     }
                     Spacer()
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(Color.vAmber.opacity(0.7))
-                        Text(riskLevel)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color.vForeground)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Based on your patterns, there's a ")
-                        .foregroundStyle(Color.vForeground.opacity(0.8)) +
-                    Text("\(riskPercent)% chance")
-                        .fontWeight(.medium)
-                        .foregroundColor(Color.vForeground) +
-                    Text(" of a glucose spike above 140 mg/dL in the next 4 hours.")
-                        .foregroundStyle(Color.vForeground.opacity(0.8))
-                }
-                .font(.system(size: 13))
-                .lineSpacing(4)
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.vSecondary.opacity(0.5))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 0)
-                        .stroke(Color.vBorder, lineWidth: 0.5)
-                )
-                .padding(.top, 20)
-
-                VLabelText(text: "Contributing Factors")
-                    .padding(.top, 24)
-
-                VStack(spacing: 0) {
-                    ForEach(displayFactors) { factor in
-                        FactorRow(
-                            factor: factor,
-                            isExpanded: expandedFactor == factor.id,
-                            isLast: factor.id == displayFactors.last?.id
-                        ) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                expandedFactor = expandedFactor == factor.id ? nil : factor.id
-                            }
+                    if hasData {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundStyle(Color.vAmber.opacity(0.7))
+                                .accessibilityHidden(true)
+                            Text(riskLevel)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Color.vForeground)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Risk level: \(riskLevel)")
                     }
                 }
-                .padding(.top, 16)
 
-                Divider()
-                    .foregroundStyle(Color.vBorder)
-                    .padding(.top, 20)
-
-                VLabelText(text: "Suggestion")
-                    .padding(.top, 20)
-
-                Text("A 15-minute walk now could reduce your spike risk by an estimated 30%. On similar days, post-walk readings averaged 112 mg/dL vs. 141 mg/dL without.")
+                if !hasData {
+                    VStack(spacing: 6) {
+                        Text("Waiting for data")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Color.vMutedForeground.opacity(0.6))
+                        Text("Log glucose readings and meals to see your spike risk prediction.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.vMutedForeground.opacity(0.4))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Based on your patterns, there's a ")
+                            .foregroundStyle(Color.vForeground.opacity(0.8)) +
+                        Text("\(riskPercent)% chance")
+                            .fontWeight(.medium)
+                            .foregroundColor(Color.vForeground) +
+                        Text(" of a glucose spike above 140 mg/dL in the next 4 hours.")
+                            .foregroundStyle(Color.vForeground.opacity(0.8))
+                    }
                     .font(.system(size: 13))
                     .lineSpacing(4)
-                    .foregroundStyle(Color.vForeground.opacity(0.8))
-                    .padding(.top, 12)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.vSecondary.opacity(0.5))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 0)
+                            .stroke(Color.vBorder, lineWidth: 0.5)
+                    )
+                    .padding(.top, 20)
+
+                    if !displayFactors.isEmpty {
+                        VLabelText(text: "Contributing Factors")
+                            .padding(.top, 24)
+
+                        VStack(spacing: 0) {
+                            ForEach(displayFactors) { factor in
+                                FactorRow(
+                                    factor: factor,
+                                    isExpanded: expandedFactor == factor.id,
+                                    isLast: factor.id == displayFactors.last?.id
+                                ) {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        expandedFactor = expandedFactor == factor.id ? nil : factor.id
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.top, 16)
+                    }
+
+                    if let result = state.stabilityResult, let suggestion = result.suggestion {
+                        Divider()
+                            .foregroundStyle(Color.vBorder)
+                            .padding(.top, 20)
+
+                        VLabelText(text: "Suggestion")
+                            .padding(.top, 20)
+
+                        Text(suggestion)
+                            .font(.system(size: 13))
+                            .lineSpacing(4)
+                            .foregroundStyle(Color.vForeground.opacity(0.8))
+                            .padding(.top, 12)
+                    }
+                }
             }
         }
     }
 }
 
 private struct DisplayFactor: Identifiable {
-    let id = UUID()
+    var id: String { label }
     let label: String
     let impact: String
     let explanation: String

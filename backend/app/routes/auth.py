@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, status
@@ -134,7 +135,6 @@ async def request_password_reset(body: PasswordResetRequest, db: asyncpg.Connect
         # TODO: send email with reset link containing `raw` token
         # For now, log in dev mode
         if settings.env == "development":
-            import logging
             logging.getLogger("verazoi.auth").info("Reset token for %s: %s", body.email, raw)
 
     return {"status": "If that email exists, a reset link has been sent."}
