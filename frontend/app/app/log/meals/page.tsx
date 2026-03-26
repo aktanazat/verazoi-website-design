@@ -13,6 +13,10 @@ const quickFoods = [
   "Fruit", "Yogurt", "Pasta", "Fish", "Nuts", "Smoothie",
 ]
 
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
 export default function MealsLogPage() {
   const { addMeal } = useAppData()
   const [mealType, setMealType] = useState<MealType>("Breakfast")
@@ -23,13 +27,41 @@ export default function MealsLogPage() {
   const [saving, setSaving] = useState(false)
   const [recognizing, setRecognizing] = useState(false)
   const [recognizeError, setRecognizeError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [playbookError, setPlaybookError] = useState<string | null>(null)
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [pendingPhotoUrl, setPendingPhotoUrl] = useState<string | null>(null)
   const [playbook, setPlaybook] = useState<api.PlaybookEntry[]>([])
 
   useEffect(() => {
-    if (selected.length === 0) { setPlaybook([]); return }
-    api.getPlaybook(selected).then(setPlaybook).catch(() => setPlaybook([]))
+    let active = true
+
+    if (selected.length === 0) {
+      setPlaybook([])
+      setPlaybookError(null)
+      return () => {
+        active = false
+      }
+    }
+
+    async function loadPlaybook() {
+      try {
+        const entries = await api.getPlaybook(selected)
+        if (!active) return
+        setPlaybook(entries)
+        setPlaybookError(null)
+      } catch (error) {
+        if (!active) return
+        setPlaybook([])
+        setPlaybookError(errorMessage(error, "Could not load your food data."))
+      }
+    }
+
+    void loadPlaybook()
+
+    return () => {
+      active = false
+    }
   }, [selected])
 
   useEffect(() => {
@@ -52,10 +84,16 @@ export default function MealsLogPage() {
   const handleSave = async () => {
     if (selected.length === 0 || saving) return
     setSaving(true)
-    await addMeal(mealType, selected, notes)
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => { setSaved(false); setSelected([]); setNotes("") }, 2000)
+    setSaveError(null)
+    try {
+      await addMeal(mealType, selected, notes)
+      setSaved(true)
+      setTimeout(() => { setSaved(false); setSelected([]); setNotes("") }, 2000)
+    } catch (error) {
+      setSaveError(errorMessage(error, "Could not save meal."))
+    } finally {
+      setSaving(false)
+    }
   }
 
   const clearPendingPhoto = () => {
@@ -79,8 +117,8 @@ export default function MealsLogPage() {
       const foods = await api.recognizeFood(pendingPhoto)
       setSelected((prev) => [...new Set([...prev, ...foods])])
       clearPendingPhoto()
-    } catch {
-      setRecognizeError("Could not recognize foods from that photo.")
+    } catch (error) {
+      setRecognizeError(errorMessage(error, "Could not recognize foods from that photo."))
     }
     setRecognizing(false)
   }
@@ -96,6 +134,12 @@ export default function MealsLogPage() {
           {saved ? "Saved" : saving ? "..." : "Save meal"}
         </button>
       </div>
+
+      {saveError && (
+        <p className="mb-5 text-[12px] text-amber-700">
+          {saveError}
+        </p>
+      )}
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="border border-border p-6">
@@ -193,6 +237,12 @@ export default function MealsLogPage() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {playbookError && (
+              <p className="mt-4 text-[11px] text-amber-700">
+                {playbookError}
+              </p>
             )}
           </div>
         </div>

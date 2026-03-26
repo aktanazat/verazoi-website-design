@@ -1,30 +1,55 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { getGoals, updateGoals, type Goals } from "@/lib/api"
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback
+}
 
 export function GoalSettings() {
   const [goals, setGoals] = useState<Goals>({ glucose_low: 70, glucose_high: 140, daily_steps: 10000, sleep_hours: 8 })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  const fetchGoals = useCallback(async () => {
-    try {
-      const data = await getGoals()
-      setGoals(data)
-    } catch {}
+  useEffect(() => {
+    let active = true
+
+    async function loadGoals() {
+      try {
+        const data = await getGoals()
+        if (!active) return
+        setGoals(data)
+        setLoadError(null)
+      } catch (error) {
+        if (!active) return
+        setLoadError(errorMessage(error, "Could not load goals."))
+      }
+    }
+
+    void loadGoals()
+
+    return () => {
+      active = false
+    }
   }, [])
 
-  useEffect(() => { fetchGoals() }, [fetchGoals])
-
   const handleSave = async () => {
+    if (saving) return
     setSaving(true)
+    setSaveError(null)
     try {
-      await updateGoals(goals)
+      const updated = await updateGoals(goals)
+      setGoals(updated)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch {}
-    setSaving(false)
+    } catch (error) {
+      setSaveError(errorMessage(error, "Could not save goals."))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -80,6 +105,12 @@ export function GoalSettings() {
       >
         {saved ? "Saved" : saving ? "..." : "Save goals"}
       </button>
+
+      {(saveError || loadError) && (
+        <p className="mt-3 text-[12px] text-amber-700">
+          {saveError ?? loadError}
+        </p>
+      )}
     </div>
   )
 }

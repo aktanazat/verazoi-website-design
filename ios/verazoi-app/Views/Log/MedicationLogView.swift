@@ -10,6 +10,8 @@ struct MedicationLogView: View {
     @State private var timing: MedicationTiming = .morning
     @State private var notes = ""
     @State private var saved = false
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     private var parsedDose: Double? {
         guard let d = Double(doseValue), d > 0, d <= 5000 else { return nil }
@@ -33,16 +35,25 @@ struct MedicationLogView: View {
                     Spacer()
                     Button {
                         guard let dose = parsedDose else { return }
-                        state.addMedication(name: name, doseValue: dose, doseUnit: doseUnit, timing: timing.rawValue, notes: notes)
-                        saved = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            saved = false
-                            name = ""
-                            doseValue = ""
-                            notes = ""
+                        isSaving = true
+                        saveError = nil
+                        Task {
+                            do {
+                                try await state.addMedication(name: name, doseValue: dose, doseUnit: doseUnit, timing: timing.rawValue, notes: notes)
+                                saved = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    saved = false
+                                    name = ""
+                                    doseValue = ""
+                                    notes = ""
+                                }
+                            } catch {
+                                saveError = userFacingErrorMessage(error, fallback: "Could not log medication.")
+                            }
+                            isSaving = false
                         }
                     } label: {
-                        Text(saved ? "Saved" : "Log medication")
+                        Text(saved ? "Saved" : (isSaving ? "Saving..." : "Log medication"))
                             .font(.system(size: 12, weight: .medium))
                             .tracking(0.4)
                             .foregroundStyle(Color.vBackground)
@@ -50,10 +61,19 @@ struct MedicationLogView: View {
                             .padding(.vertical, 10)
                             .background(canSave ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(!canSave)
+                    .disabled(!canSave || isSaving)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+
+                if let saveError {
+                    Text(saveError)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     VCard {

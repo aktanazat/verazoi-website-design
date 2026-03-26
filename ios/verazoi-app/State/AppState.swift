@@ -1,6 +1,17 @@
 import Foundation
 import Observation
 
+func userFacingErrorMessage(_ error: Error, fallback: String) -> String {
+    switch error {
+    case APIError.httpError(_, let detail):
+        return detail
+    case APIError.notAuthenticated:
+        return "Your session expired. Sign in again."
+    default:
+        return fallback
+    }
+}
+
 @Observable
 final class AppState {
     var meals: [Meal] = []
@@ -20,13 +31,14 @@ final class AppState {
     var weeklyInsight: WeeklyInsight?
     var weeklyInsightPreview: WeeklyInsightPreview?
     var fetchError: String?
+    var insightError: String?
     var isLoadingTrends = false
     var isLoadingFoodImpact = false
 
     weak var wearable: WearableState?
 
-    private func nowTime() -> String {
-        Date().formatted(date: .omitted, time: .shortened)
+    private func recordedTime(_ date: Date) -> String {
+        date.formatted(date: .omitted, time: .shortened)
     }
 
     func recalcScore() {
@@ -57,42 +69,42 @@ final class AppState {
         }
     }
 
-    func addGlucoseReading(value: Int, timing: GlucoseTiming) {
-        let time = nowTime()
+    func addGlucoseReading(value: Int, timing: GlucoseTiming) async throws {
+        let record = try await APIClient.shared.createGlucose(value: value, timing: timing.rawValue)
+        let time = recordedTime(record.recordedAt)
         glucoseReadings.append(GlucoseReading(time: time, value: value, timing: timing))
         timeline.append(TimelineEvent(time: time, type: .glucose, label: timing.displayName, value: "\(value) mg/dL"))
         recalcScore()
-        Task { try? await APIClient.shared.createGlucose(value: value, timing: timing.rawValue) }
     }
 
-    func addMeal(mealType: String, foods: [String], notes: String) {
-        let time = nowTime()
+    func addMeal(mealType: String, foods: [String], notes: String) async throws {
+        let record = try await APIClient.shared.createMeal(mealType: mealType, foods: foods, notes: notes)
+        let time = recordedTime(record.recordedAt)
         meals.append(Meal(time: time, mealType: mealType, foods: foods, notes: notes))
         timeline.append(TimelineEvent(time: time, type: .meal, label: mealType, value: foods.joined(separator: ", ")))
-        Task { try? await APIClient.shared.createMeal(mealType: mealType, foods: foods, notes: notes) }
     }
 
-    func addActivity(activityType: String, duration: Int, intensity: String) {
-        let time = nowTime()
+    func addActivity(activityType: String, duration: Int, intensity: String) async throws {
+        let record = try await APIClient.shared.createActivity(activityType: activityType, duration: duration, intensity: intensity)
+        let time = recordedTime(record.recordedAt)
         activities.append(ActivityEntry(time: time, activityType: activityType, duration: duration, intensity: intensity))
         timeline.append(TimelineEvent(time: time, type: .activity, label: activityType, value: "\(duration) min, \(intensity.lowercased())"))
         recalcScore()
-        Task { try? await APIClient.shared.createActivity(activityType: activityType, duration: duration, intensity: intensity) }
     }
 
-    func addSleep(hours: Double, quality: String) {
-        let time = nowTime()
+    func addSleep(hours: Double, quality: String) async throws {
+        let record = try await APIClient.shared.createSleep(hours: hours, quality: quality)
+        let time = recordedTime(record.recordedAt)
         sleepEntries.append(SleepEntry(time: time, hours: hours, quality: quality))
         timeline.append(TimelineEvent(time: time, type: .sleep, label: "Sleep logged", value: "\(hours) hrs, \(quality)"))
         recalcScore()
-        Task { try? await APIClient.shared.createSleep(hours: hours, quality: quality) }
     }
 
-    func addMedication(name: String, doseValue: Double, doseUnit: String, timing: String, notes: String) {
-        let time = nowTime()
+    func addMedication(name: String, doseValue: Double, doseUnit: String, timing: String, notes: String) async throws {
+        let record = try await APIClient.shared.createMedication(name: name, doseValue: doseValue, doseUnit: doseUnit, timing: timing, notes: notes)
+        let time = recordedTime(record.recordedAt)
         medications.append(MedicationEntry(time: time, name: name, doseValue: doseValue, doseUnit: doseUnit, timing: timing, notes: notes))
         timeline.append(TimelineEvent(time: time, type: .medication, label: name, value: "\(doseValue) \(doseUnit)"))
-        Task { try? await APIClient.shared.createMedication(name: name, doseValue: doseValue, doseUnit: doseUnit, timing: timing, notes: notes) }
     }
 
     static func clearWidgetData() {
@@ -188,7 +200,10 @@ final class AppState {
             let (glucoseT, stabilityT) = try await (gt, st)
             glucoseTrend = glucoseT.map { GlucoseTrendPoint(date: $0.date, avg: $0.avg, min: $0.min, max: $0.max) }
             stabilityTrend = stabilityT.map { StabilityTrendPoint(date: $0.date, score: $0.score) }
-        } catch {}
+        } catch {
+            glucoseTrend = []
+            stabilityTrend = []
+        }
         isLoadingTrends = false
     }
 
@@ -197,29 +212,38 @@ final class AppState {
         do {
             let impacts = try await APIClient.shared.getFoodImpact()
             foodImpacts = impacts.map { FoodImpact(food: $0.food, avgDelta: $0.avgDelta, occurrences: $0.occurrences) }
-        } catch {}
+        } catch {
+            foodImpacts = []
+        }
         isLoadingFoodImpact = false
     }
 
     func fetchInsight() async {
+        insightError = nil
         do {
             let insight = try await APIClient.shared.getWeeklyInsight()
             weeklyInsight = WeeklyInsight(id: insight.id, weekStart: insight.weekStart, summary: insight.summary, generatedAt: insight.generatedAt)
-        } catch {}
+        } catch APIError.httpError(404, _) {
+            weeklyInsight = nil
+        } catch {
+            insightError = userFacingErrorMessage(error, fallback: "Could not load the weekly insight.")
+        }
     }
 
     func fetchInsightPreview() async {
-        guard let preview = try? await APIClient.shared.getWeeklyInsightPreview() else {
+        do {
+            let preview = try await APIClient.shared.getWeeklyInsightPreview()
+            weeklyInsightPreview = WeeklyInsightPreview(
+                weekStart: preview.weekStart,
+                weekEnd: preview.weekEnd,
+                systemPrompt: preview.systemPrompt,
+                userPrompt: preview.userPrompt
+            )
+            insightError = nil
+        } catch {
             weeklyInsightPreview = nil
-            return
+            insightError = userFacingErrorMessage(error, fallback: "Could not load the reviewed payload.")
         }
-
-        weeklyInsightPreview = WeeklyInsightPreview(
-            weekStart: preview.weekStart,
-            weekEnd: preview.weekEnd,
-            systemPrompt: preview.systemPrompt,
-            userPrompt: preview.userPrompt
-        )
     }
 
     func generateInsight() async {
@@ -227,18 +251,24 @@ final class AppState {
         do {
             let insight = try await APIClient.shared.generateWeeklyInsight(weekStart: preview.weekStart, userPrompt: preview.userPrompt)
             weeklyInsight = WeeklyInsight(id: insight.id, weekStart: insight.weekStart, summary: insight.summary, generatedAt: insight.generatedAt)
-        } catch {}
+            insightError = nil
+        } catch {
+            insightError = userFacingErrorMessage(error, fallback: "Could not generate the weekly insight.")
+        }
     }
 
     func syncWearableToBackend() {
         guard let w = wearable else { return }
         Task {
-            if (try? await APIClient.shared.syncWearable(
+            do {
+                _ = try await APIClient.shared.syncWearable(
                 heartRate: w.latestHeartRate, steps: w.todaySteps,
                 activeMinutes: w.todayActiveMinutes, sleepHours: w.lastSleepHours,
                 sleepQuality: w.lastSleepQuality, glucoseReadings: w.latestGlucoseReadings
-            )) != nil {
+                )
                 await fetchFromBackend()
+            } catch {
+                fetchError = userFacingErrorMessage(error, fallback: "Could not sync wearable data.")
             }
         }
     }

@@ -19,6 +19,9 @@ struct MealsLogView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var pendingPhotoData: Data?
     @State private var showPhotoReview = false
+    @State private var isSaving = false
+    @State private var saveError: String?
+    @State private var recognizeError: String?
     @State private var recognizing = false
     @State private var playbook: [(food: String, delta: Double, suggestion: String?)] = []
 
@@ -29,15 +32,24 @@ struct MealsLogView: View {
                     Spacer()
                     Button {
                         guard !selected.isEmpty else { return }
-                        state.addMeal(mealType: mealType, foods: selected, notes: notes)
-                        saved = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            saved = false
-                            selected = []
-                            notes = ""
+                        isSaving = true
+                        saveError = nil
+                        Task {
+                            do {
+                                try await state.addMeal(mealType: mealType, foods: selected, notes: notes)
+                                saved = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    saved = false
+                                    selected = []
+                                    notes = ""
+                                }
+                            } catch {
+                                saveError = userFacingErrorMessage(error, fallback: "Could not save meal.")
+                            }
+                            isSaving = false
                         }
                     } label: {
-                        Text(saved ? "Saved" : "Save meal")
+                        Text(saved ? "Saved" : (isSaving ? "Saving..." : "Save meal"))
                             .font(.system(size: 12, weight: .medium))
                             .tracking(0.4)
                             .foregroundStyle(Color.vBackground)
@@ -45,10 +57,19 @@ struct MealsLogView: View {
                             .padding(.vertical, 10)
                             .background(selected.isEmpty ? Color.vForeground.opacity(0.3) : Color.vForeground)
                     }
-                    .disabled(selected.isEmpty)
+                    .disabled(selected.isEmpty || isSaving)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+
+                if let saveError {
+                    Text(saveError)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     VCard {
@@ -116,6 +137,13 @@ struct MealsLogView: View {
                                 .disabled(recognizing)
                             }
                             .padding(.top, 16)
+
+                            if let recognizeError {
+                                Text(recognizeError)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.vAmber)
+                                    .padding(.top, 12)
+                            }
 
                             if !playbook.isEmpty {
                                 VLabelText(text: "Your data for these foods")
@@ -204,10 +232,15 @@ struct MealsLogView: View {
         .onChange(of: photoItem) {
             guard let photoItem else { return }
             recognizing = true
+            recognizeError = nil
             Task {
-                if let data = try? await photoItem.loadTransferable(type: Data.self) {
-                    pendingPhotoData = data
-                    showPhotoReview = true
+                do {
+                    if let data = try await photoItem.loadTransferable(type: Data.self) {
+                        pendingPhotoData = data
+                        showPhotoReview = true
+                    }
+                } catch {
+                    recognizeError = userFacingErrorMessage(error, fallback: "Could not load that photo.")
                 }
                 recognizing = false
                 self.photoItem = nil
@@ -269,10 +302,17 @@ struct MealsLogView: View {
     }
 
     private func fetchPlaybook() {
-        guard !selected.isEmpty else { playbook = []; return }
+        guard !selected.isEmpty else {
+            playbook = []
+            return
+        }
         Task {
-            let entries = try? await APIClient.shared.getPlaybook(foods: selected)
-            playbook = (entries ?? []).map { (food: $0.food, delta: $0.avgDelta, suggestion: $0.suggestion) }
+            do {
+                let entries = try await APIClient.shared.getPlaybook(foods: selected)
+                playbook = entries.map { (food: $0.food, delta: $0.avgDelta, suggestion: $0.suggestion) }
+            } catch {
+                playbook = []
+            }
         }
     }
 
@@ -285,14 +325,19 @@ struct MealsLogView: View {
 
     private func recognizePhoto(_ data: Data) {
         recognizing = true
+        recognizeError = nil
         showPhotoReview = false
 
         Task {
-            let foods = (try? await APIClient.shared.recognizeFood(imageData: data)) ?? []
-            for food in foods where !selected.contains(food) {
-                selected.append(food)
+            do {
+                let foods = try await APIClient.shared.recognizeFood(imageData: data)
+                for food in foods where !selected.contains(food) {
+                    selected.append(food)
+                }
+                pendingPhotoData = nil
+            } catch {
+                recognizeError = userFacingErrorMessage(error, fallback: "Could not recognize foods from that photo.")
             }
-            pendingPhotoData = nil
             recognizing = false
         }
     }

@@ -9,6 +9,8 @@ struct ActivityLogView: View {
     @State private var duration = ""
     @State private var intensity = "Moderate"
     @State private var saved = false
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     private var parsedDuration: Int? {
         guard let d = Int(duration), d >= 1, d <= 480 else { return nil }
@@ -28,14 +30,23 @@ struct ActivityLogView: View {
                     Spacer()
                     Button {
                         guard let dur = parsedDuration else { return }
-                        state.addActivity(activityType: actType, duration: dur, intensity: intensity)
-                        saved = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            saved = false
-                            duration = ""
+                        isSaving = true
+                        saveError = nil
+                        Task {
+                            do {
+                                try await state.addActivity(activityType: actType, duration: dur, intensity: intensity)
+                                saved = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    saved = false
+                                    duration = ""
+                                }
+                            } catch {
+                                saveError = userFacingErrorMessage(error, fallback: "Could not save activity.")
+                            }
+                            isSaving = false
                         }
                     } label: {
-                        Text(saved ? "Saved" : "Save activity")
+                        Text(saved ? "Saved" : (isSaving ? "Saving..." : "Save activity"))
                             .font(.system(size: 12, weight: .medium))
                             .tracking(0.4)
                             .foregroundStyle(Color.vBackground)
@@ -43,10 +54,19 @@ struct ActivityLogView: View {
                             .padding(.vertical, 10)
                             .background(parsedDuration != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(parsedDuration == nil)
+                    .disabled(parsedDuration == nil || isSaving)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+
+                if let saveError {
+                    Text(saveError)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     VCard {

@@ -90,6 +90,14 @@ struct InsightView: View {
                                 .padding(.top, 20)
                         }
 
+                        if let insightError = state.insightError {
+                            Text(insightError)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.vAmber)
+                                .lineSpacing(3)
+                                .padding(.top, 16)
+                        }
+
                         if let insight = state.weeklyInsight {
                             HStack {
                                 VLabelText(text: "Week of \(insight.weekStart)")

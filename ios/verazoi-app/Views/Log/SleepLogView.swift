@@ -7,6 +7,8 @@ struct SleepLogView: View {
     @State private var sleepHours = ""
     @State private var sleepQuality = "good"
     @State private var saved = false
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     private var parsedHours: Double? {
         guard let h = Double(sleepHours), h > 0, h <= 24 else { return nil }
@@ -26,14 +28,23 @@ struct SleepLogView: View {
                     Spacer()
                     Button {
                         guard let hours = parsedHours else { return }
-                        state.addSleep(hours: hours, quality: sleepQuality)
-                        saved = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            saved = false
-                            sleepHours = ""
+                        isSaving = true
+                        saveError = nil
+                        Task {
+                            do {
+                                try await state.addSleep(hours: hours, quality: sleepQuality)
+                                saved = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    saved = false
+                                    sleepHours = ""
+                                }
+                            } catch {
+                                saveError = userFacingErrorMessage(error, fallback: "Could not save sleep.")
+                            }
+                            isSaving = false
                         }
                     } label: {
-                        Text(saved ? "Saved" : "Save sleep")
+                        Text(saved ? "Saved" : (isSaving ? "Saving..." : "Save sleep"))
                             .font(.system(size: 12, weight: .medium))
                             .tracking(0.4)
                             .foregroundStyle(Color.vBackground)
@@ -41,10 +52,19 @@ struct SleepLogView: View {
                             .padding(.vertical, 10)
                             .background(parsedHours != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(parsedHours == nil)
+                    .disabled(parsedHours == nil || isSaving)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+
+                if let saveError {
+                    Text(saveError)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     VCard {

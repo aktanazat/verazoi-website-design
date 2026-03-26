@@ -5,6 +5,8 @@ struct GlucoseLogView: View {
     @State private var glucoseValue = ""
     @State private var timing: GlucoseTiming = .fasting
     @State private var saved = false
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     private var parsedValue: Int? {
         guard let v = Int(glucoseValue), v >= 30, v <= 500 else { return nil }
@@ -24,14 +26,23 @@ struct GlucoseLogView: View {
                     Spacer()
                     Button {
                         guard let value = parsedValue else { return }
-                        state.addGlucoseReading(value: value, timing: timing)
-                        saved = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            saved = false
-                            glucoseValue = ""
+                        isSaving = true
+                        saveError = nil
+                        Task {
+                            do {
+                                try await state.addGlucoseReading(value: value, timing: timing)
+                                saved = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    saved = false
+                                    glucoseValue = ""
+                                }
+                            } catch {
+                                saveError = userFacingErrorMessage(error, fallback: "Could not save reading.")
+                            }
+                            isSaving = false
                         }
                     } label: {
-                        Text(saved ? "Saved" : "Save reading")
+                        Text(saved ? "Saved" : (isSaving ? "Saving..." : "Save reading"))
                             .font(.system(size: 12, weight: .medium))
                             .tracking(0.4)
                             .foregroundStyle(Color.vBackground)
@@ -39,10 +50,19 @@ struct GlucoseLogView: View {
                             .padding(.vertical, 10)
                             .background(parsedValue != nil ? Color.vForeground : Color.vForeground.opacity(0.3))
                     }
-                    .disabled(parsedValue == nil)
+                    .disabled(parsedValue == nil || isSaving)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+
+                if let saveError {
+                    Text(saveError)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.vAmber)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     VCard {
