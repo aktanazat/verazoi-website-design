@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 import asyncpg
 from app.database import get_db
 from app.redis_client import get_redis
-from app.models.schemas import InsightResponse
+from app.models.schemas import InsightGenerateRequest, InsightPreviewResponse, InsightResponse
 from app.services.auth import get_current_user
-from app.services.insights import generate_insight
+from app.services.insights import INSIGHT_SYSTEM_PROMPT, build_insight_user_prompt, generate_insight, generate_insight_from_prompt
 
 router = APIRouter(prefix="/insights", tags=["insights"])
 
@@ -33,6 +33,7 @@ async def get_weekly(
 
 @router.post("/weekly/generate", status_code=201)
 async def generate_weekly(
+    body: InsightGenerateRequest,
     user_id: str = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db),
 ):
@@ -42,7 +43,9 @@ async def generate_weekly(
         return {"status": "rate_limited", "message": "Insight already generated recently. Try again later."}
 
     ws = current_week_start()
-    summary = await generate_insight(user_id, db, ws)
+    if body.week_start != str(ws):
+        raise HTTPException(status_code=400, detail="Insight preview is out of date. Refresh and review it again.")
+    summary = await generate_insight_from_prompt(body.user_prompt)
 
     row = await db.fetchrow(
         """INSERT INTO ai_insights (user_id, week_start, summary)
@@ -57,6 +60,21 @@ async def generate_weekly(
 
     return InsightResponse(id=str(row["id"]), week_start=str(ws),
                            summary=summary, generated_at=row["generated_at"])
+
+
+@router.get("/weekly/preview", response_model=InsightPreviewResponse)
+async def preview_weekly(
+    user_id: str = Depends(get_current_user),
+    db: asyncpg.Connection = Depends(get_db),
+):
+    ws = current_week_start()
+    user_prompt = await build_insight_user_prompt(user_id, db, ws)
+    return InsightPreviewResponse(
+        week_start=str(ws),
+        week_end=str(ws + timedelta(days=6)),
+        system_prompt=INSIGHT_SYSTEM_PROMPT,
+        user_prompt=user_prompt,
+    )
 
 
 @router.get("/history")

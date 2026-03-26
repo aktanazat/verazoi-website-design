@@ -217,12 +217,18 @@ actor APIClient {
         let activeMinutes: Int?
         let sleepHours: Double?
         let sleepQuality: String?
+        let glucoseReadings: [SyncedGlucoseReading]?
     }
 
-    func syncWearable(heartRate: Int?, steps: Int?, activeMinutes: Int?, sleepHours: Double?, sleepQuality: String?) async throws {
-        let _: [String: String] = try await request("POST", "/sync/wearable", body: WearableSyncBody(
+    struct WearableSyncResponse: Decodable {
+        let status: String
+        let glucoseReadingsImported: Int?
+    }
+
+    func syncWearable(heartRate: Int?, steps: Int?, activeMinutes: Int?, sleepHours: Double?, sleepQuality: String?, glucoseReadings: [SyncedGlucoseReading]) async throws -> WearableSyncResponse {
+        try await request("POST", "/sync/wearable", body: WearableSyncBody(
             heartRate: heartRate, steps: steps, activeMinutes: activeMinutes,
-            sleepHours: sleepHours, sleepQuality: sleepQuality
+            sleepHours: sleepHours, sleepQuality: sleepQuality, glucoseReadings: glucoseReadings
         ))
     }
 
@@ -281,13 +287,27 @@ actor APIClient {
     // MARK: - Insights
 
     struct InsightRecord: Decodable { let id: String; let weekStart: String; let summary: String; let generatedAt: String }
+    struct InsightPreviewRecord: Decodable {
+        let weekStart: String
+        let weekEnd: String
+        let systemPrompt: String
+        let userPrompt: String
+    }
+    struct InsightGenerateBody: Encodable {
+        let weekStart: String
+        let userPrompt: String
+    }
 
     func getWeeklyInsight() async throws -> InsightRecord {
         try await request("GET", "/insights/weekly")
     }
 
-    func generateWeeklyInsight() async throws -> InsightRecord {
-        try await request("POST", "/insights/weekly/generate")
+    func getWeeklyInsightPreview() async throws -> InsightPreviewRecord {
+        try await request("GET", "/insights/weekly/preview")
+    }
+
+    func generateWeeklyInsight(weekStart: String, userPrompt: String) async throws -> InsightRecord {
+        try await request("POST", "/insights/weekly/generate", body: InsightGenerateBody(weekStart: weekStart, userPrompt: userPrompt))
     }
 
     func getInsightHistory(limit: Int = 10) async throws -> [InsightRecord] {

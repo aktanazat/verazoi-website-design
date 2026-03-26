@@ -268,7 +268,6 @@ private struct HealthDataPage: View {
     @Binding var authorized: Bool
     let onComplete: () -> Void
     @State private var isRequesting = false
-    @State private var skipped = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -287,7 +286,7 @@ private struct HealthDataPage: View {
             Spacer()
                 .frame(height: 24)
 
-            Text("Verazoi reads heart rate, steps, exercise time, and sleep from Apple Health to calculate your stability score. No data is written back.")
+            Text("Verazoi reads glucose, heart rate, steps, exercise time, and sleep from Apple Health to calculate your stability score. No data is written back.")
                 .font(.vBody())
                 .foregroundStyle(Color.vMutedForeground)
                 .multilineTextAlignment(.center)
@@ -298,6 +297,7 @@ private struct HealthDataPage: View {
                 .frame(height: 32)
 
             VStack(spacing: 12) {
+                PermissionRow(icon: "drop.fill", label: "Blood glucose")
                 PermissionRow(icon: "heart.fill", label: "Heart rate & resting HR")
                 PermissionRow(icon: "figure.walk", label: "Step count")
                 PermissionRow(icon: "flame.fill", label: "Exercise minutes")

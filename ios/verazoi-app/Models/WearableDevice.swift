@@ -17,20 +17,20 @@ enum WearableProvider: String, CaseIterable, Identifiable, Codable {
 
     var description: String {
         switch self {
-        case .appleWatch: "Reads heart rate, steps, workouts, and sleep directly from Apple Health."
-        case .garmin: "Reads data synced from Garmin Connect to Apple Health."
-        case .samsung: "Reads data synced from Samsung Health to Apple Health."
+        case .appleWatch: "Reads glucose, heart rate, steps, workouts, and sleep directly from Apple Health."
+        case .garmin: "Reads glucose and other health data synced from Garmin Connect to Apple Health."
+        case .samsung: "Reads glucose and other health data synced from Samsung Health to Apple Health."
         }
     }
 
     var syncCapabilities: [SyncCapability] {
         switch self {
         case .appleWatch:
-            return [.heartRate, .steps, .workouts, .sleep, .restingEnergy, .activeEnergy]
+            return [.glucose, .heartRate, .steps, .workouts, .sleep, .restingEnergy, .activeEnergy]
         case .garmin:
-            return [.heartRate, .steps, .workouts, .sleep]
+            return [.glucose, .heartRate, .steps, .workouts, .sleep]
         case .samsung:
-            return [.heartRate, .steps, .workouts, .sleep]
+            return [.glucose, .heartRate, .steps, .workouts, .sleep]
         }
     }
 
@@ -44,6 +44,7 @@ enum WearableProvider: String, CaseIterable, Identifiable, Codable {
 }
 
 enum SyncCapability: String {
+    case glucose = "Glucose"
     case heartRate = "Heart Rate"
     case steps = "Steps"
     case workouts = "Workouts"

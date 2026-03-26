@@ -37,14 +37,25 @@ enum GlucoseTiming: String, CaseIterable {
     case fasting
     case before
     case after
+    case cgm
+
+    static var manualCases: [GlucoseTiming] {
+        [.fasting, .before, .after]
+    }
 
     var displayName: String {
         switch self {
         case .fasting: "Fasting"
         case .before: "Pre-meal"
         case .after: "Post-meal"
+        case .cgm: "Auto-sync"
         }
     }
+}
+
+struct SyncedGlucoseReading: Encodable {
+    let value: Int
+    let recordedAt: Date
 }
 
 struct Meal: Identifiable {
@@ -121,6 +132,13 @@ struct WeeklyInsight: Identifiable {
     let weekStart: String
     let summary: String
     let generatedAt: String
+}
+
+struct WeeklyInsightPreview {
+    let weekStart: String
+    let weekEnd: String
+    let systemPrompt: String
+    let userPrompt: String
 }
 
 enum MedicationTiming: String, CaseIterable {

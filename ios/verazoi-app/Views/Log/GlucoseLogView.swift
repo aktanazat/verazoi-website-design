@@ -71,7 +71,7 @@ struct GlucoseLogView: View {
                                 .padding(.top, 20)
 
                             HStack(spacing: 8) {
-                                ForEach(GlucoseTiming.allCases, id: \.self) { t in
+                                ForEach(GlucoseTiming.manualCases, id: \.self) { t in
                                     VPillButton(
                                         title: t.displayName,
                                         isSelected: timing == t
@@ -119,10 +119,15 @@ struct GlucoseLogView: View {
                                                 Text(reading.time)
                                                     .font(.system(size: 13))
                                                     .foregroundStyle(Color.vMutedForeground)
-                                                Text("\(reading.value)")
-                                                    .font(.vSerif(20))
-                                                    .foregroundStyle(Color.vForeground)
-                                                    .accessibilityLabel("\(reading.value) milligrams per deciliter")
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text("\(reading.value)")
+                                                        .font(.vSerif(20))
+                                                        .foregroundStyle(Color.vForeground)
+                                                        .accessibilityLabel("\(reading.value) milligrams per deciliter")
+                                                    Text(reading.timing.displayName)
+                                                        .font(.system(size: 11))
+                                                        .foregroundStyle(Color.vMutedForeground.opacity(0.7))
+                                                }
                                             }
                                             Spacer()
                                             TrendIcon(reading: reading, previous: index > 0 ? state.glucoseReadings[index - 1] : nil)

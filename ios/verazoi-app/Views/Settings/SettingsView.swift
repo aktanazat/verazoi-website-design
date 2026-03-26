@@ -17,6 +17,7 @@ struct SettingsView: View {
 
                 VStack(spacing: 16) {
                     AccountCard()
+                    PrivacyCard()
                     CGMSettingsView()
                     GoalsSettingsCard()
                     MedScheduleView()
@@ -33,6 +34,22 @@ struct SettingsView: View {
             .padding(.bottom, 32)
         }
         .background(Color.vBackground)
+    }
+}
+
+private struct PrivacyCard: View {
+    var body: some View {
+        VCard {
+            VStack(alignment: .leading, spacing: 0) {
+                VLabelText(text: "Privacy")
+
+                Text("Apple Health data stays on-device until you sync it. AI insights use the exact weekly payload you review first. Meal photo recognition uploads the selected image only after you confirm. Direct CGM sign-in sends credentials only if you explicitly choose that path.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.vMutedForeground)
+                    .lineSpacing(4)
+                    .padding(.top, 12)
+            }
+        }
     }
 }
 

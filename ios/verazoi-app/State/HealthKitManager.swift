@@ -7,6 +7,7 @@ actor HealthKitManager {
     private let store = HKHealthStore()
 
     private let readTypes: Set<HKSampleType> = [
+        HKQuantityType(.bloodGlucose),
         HKQuantityType(.heartRate),
         HKQuantityType(.restingHeartRate),
         HKQuantityType(.stepCount),
@@ -26,14 +27,34 @@ actor HealthKitManager {
         store.authorizationStatus(for: HKQuantityType(type))
     }
 
+    // MARK: - Glucose
+
+    func fetchGlucoseReadings(days: Int = 7) async -> [SyncedGlucoseReading] {
+        let type = HKQuantityType(.bloodGlucose)
+        let now = Date()
+        guard let start = Calendar.current.date(byAdding: .day, value: -days, to: now) else { return [] }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: now, options: .strictEndDate)
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: type, predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate, order: .forward)],
+            limit: 5000
+        )
+
+        let unit = HKUnit.moleUnit(with: .milli, molarMass: HKUnitMolarMassBloodGlucose).unitDivided(by: .liter())
+        let samples = (try? await descriptor.result(for: store)) ?? []
+
+        return samples.map { sample in
+            let value = sample.quantity.doubleValue(for: unit) * 18.01559
+            return SyncedGlucoseReading(value: Int(value.rounded()), recordedAt: sample.startDate)
+        }
+    }
+
     // MARK: - Heart Rate
 
     func fetchRestingHeartRate() async -> Int? {
-        // Try resting HR first (computed by Apple Watch overnight)
         if let resting = await fetchLatestQuantity(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), dayRange: 7) {
             return Int(resting)
         }
-        // Fall back to latest heart rate reading in past 24h
         return await fetchLatestQuantity(.heartRate, unit: HKUnit.count().unitDivided(by: .minute()), dayRange: 1)
             .map { Int($0) }
     }
@@ -72,7 +93,6 @@ actor HealthKitManager {
         }
         let hours = totalSeconds / 3600
 
-        // Derive quality from sleep stage composition if available
         let deepCount = asleepSamples.filter { $0.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue }.count
         let remCount = asleepSamples.filter { $0.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue }.count
         let hasStages = deepCount > 0 || remCount > 0
@@ -80,7 +100,6 @@ actor HealthKitManager {
         let quality: String
         if hasStages {
             let stageRatio = Double(deepCount + remCount) / Double(asleepSamples.count)
-            // Deep + REM should be ~40-50% of total sleep for quality sleep
             switch (hours, stageRatio) {
             case (7..., 0.35...): quality = "great"
             case (6.5..., 0.25...): quality = "good"
@@ -88,7 +107,6 @@ actor HealthKitManager {
             default: quality = "poor"
             }
         } else {
-            // No stage data (e.g. Garmin/Samsung) - estimate from duration
             switch hours {
             case 8...: quality = "great"
             case 7..<8: quality = "good"

@@ -123,12 +123,18 @@ class StabilityResponse(BaseModel):
 
 # ── Wearable ──
 
+class GlucoseSyncReading(BaseModel):
+    value: int = Field(ge=20, le=500)
+    recorded_at: datetime
+
+
 class WearableSyncRequest(BaseModel):
     heart_rate: int | None = None
     steps: int | None = None
     active_minutes: int | None = None
     sleep_hours: float | None = None
     sleep_quality: str | None = None
+    glucose_readings: list[GlucoseSyncReading] | None = None
 
 
 # ── Medications ──
@@ -212,6 +218,18 @@ class InsightResponse(BaseModel):
     week_start: str
     summary: str
     generated_at: datetime
+
+
+class InsightPreviewResponse(BaseModel):
+    week_start: str
+    week_end: str
+    system_prompt: str
+    user_prompt: str
+
+
+class InsightGenerateRequest(BaseModel):
+    week_start: str
+    user_prompt: str
 
 
 # ── CGM ──

@@ -15,6 +15,7 @@ final class WearableState {
     }
 
     var latestHeartRate: Int?
+    var latestGlucoseReadings: [SyncedGlucoseReading] = []
     var todaySteps: Int?
     var todayActiveMinutes: Int?
     var lastSleepHours: Double?
@@ -39,7 +40,6 @@ final class WearableState {
            let provider = WearableProvider(rawValue: providerRaw) {
             connectedProvider = provider
             connectionStatus = .connected
-            // Sync immediately on restore
             Task { @MainActor in
                 await syncFromHealthKit()
                 startAutoSync()
@@ -73,7 +73,7 @@ final class WearableState {
 
             await syncFromHealthKit()
 
-            let hasData = latestHeartRate != nil || todaySteps != nil || todayActiveMinutes != nil || lastSleepHours != nil
+            let hasData = !latestGlucoseReadings.isEmpty || latestHeartRate != nil || todaySteps != nil || todayActiveMinutes != nil || lastSleepHours != nil
             if !hasData {
                 if let hint = provider.setupHint {
                     connectionError = "No health data found. \(hint)"
@@ -94,6 +94,7 @@ final class WearableState {
         connectionError = nil
         lastSyncDate = nil
         latestHeartRate = nil
+        latestGlucoseReadings = []
         todaySteps = nil
         todayActiveMinutes = nil
         lastSleepHours = nil
@@ -115,11 +116,13 @@ final class WearableState {
     private func syncFromHealthKit() async {
         let hk = HealthKitManager.shared
 
+        async let glucose = hk.fetchGlucoseReadings()
         async let hr = hk.fetchRestingHeartRate()
         async let steps = hk.fetchTodaySteps()
         async let active = hk.fetchTodayActiveMinutes()
         async let sleep = hk.fetchLastSleep()
 
+        latestGlucoseReadings = await glucose
         latestHeartRate = await hr
         todaySteps = await steps
         todayActiveMinutes = await active
@@ -127,6 +130,9 @@ final class WearableState {
         if let sleepData = await sleep {
             lastSleepHours = sleepData.hours
             lastSleepQuality = sleepData.quality
+        } else {
+            lastSleepHours = nil
+            lastSleepQuality = nil
         }
 
         lastSyncDate = Date()

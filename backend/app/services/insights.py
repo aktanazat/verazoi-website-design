@@ -3,8 +3,16 @@ from datetime import date, timedelta
 import asyncpg
 from app.config import settings
 
+INSIGHT_SYSTEM_PROMPT = (
+    "You are a metabolic health analyst for the Verazoi app. Analyze the user's weekly "
+    "health data and provide a concise, actionable summary. Focus on: glucose patterns "
+    "and what influences them, meal-glucose correlations, activity impact on metabolic "
+    "stability, sleep quality trends, and medication timing effects. Be specific with "
+    "numbers. Keep it to 3-4 short paragraphs. No greetings or sign-offs."
+)
 
-async def generate_insight(user_id: str, db: asyncpg.Connection, week_start: date) -> str:
+
+async def build_insight_user_prompt(user_id: str, db: asyncpg.Connection, week_start: date) -> str:
     week_end = week_start + timedelta(days=6)
 
     glucose = await db.fetch(
@@ -57,7 +65,7 @@ async def generate_insight(user_id: str, db: asyncpg.Connection, week_start: dat
     def fmt_meds(rows):
         return "\n".join(f"  {r['recorded_at'].strftime('%a %H:%M')} - {r['name']} {r['dose_value']}{r['dose_unit']} ({r['timing']})" for r in rows)
 
-    data_text = f"""Week: {week_start} to {week_end}
+    return f"""Week: {week_start} to {week_end}
 
 Glucose readings ({len(glucose)}):
 {fmt_glucose(glucose) if glucose else "  None"}
@@ -74,11 +82,18 @@ Sleep ({len(sleep)}):
 Medications ({len(medications)}):
 {fmt_meds(medications) if medications else "  None"}"""
 
+
+async def generate_insight_from_prompt(user_prompt: str) -> str:
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
     response = await client.messages.create(
         model="claude-sonnet-4-5-20250514",
         max_tokens=1024,
-        system="You are a metabolic health analyst for the Verazoi app. Analyze the user's weekly health data and provide a concise, actionable summary. Focus on: glucose patterns and what influences them, meal-glucose correlations, activity impact on metabolic stability, sleep quality trends, and medication timing effects. Be specific with numbers. Keep it to 3-4 short paragraphs. No greetings or sign-offs.",
-        messages=[{"role": "user", "content": data_text}],
+        system=INSIGHT_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_prompt}],
     )
     return response.content[0].text
+
+
+async def generate_insight(user_id: str, db: asyncpg.Connection, week_start: date) -> str:
+    user_prompt = await build_insight_user_prompt(user_id, db, week_start)
+    return await generate_insight_from_prompt(user_prompt)

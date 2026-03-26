@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UIKit
 
 private let mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack"]
 
@@ -16,6 +17,8 @@ struct MealsLogView: View {
     @State private var notes = ""
     @State private var saved = false
     @State private var photoItem: PhotosPickerItem?
+    @State private var pendingPhotoData: Data?
+    @State private var showPhotoReview = false
     @State private var recognizing = false
     @State private var playbook: [(food: String, delta: Double, suggestion: String?)] = []
 
@@ -203,13 +206,61 @@ struct MealsLogView: View {
             recognizing = true
             Task {
                 if let data = try? await photoItem.loadTransferable(type: Data.self) {
-                    let foods = (try? await APIClient.shared.recognizeFood(imageData: data)) ?? []
-                    for food in foods where !selected.contains(food) {
-                        selected.append(food)
-                    }
+                    pendingPhotoData = data
+                    showPhotoReview = true
                 }
                 recognizing = false
                 self.photoItem = nil
+            }
+        }
+        .sheet(isPresented: $showPhotoReview, onDismiss: {
+            pendingPhotoData = nil
+        }) {
+            if let pendingPhotoData, let image = UIImage(data: pendingPhotoData) {
+                NavigationStack {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                            Text("This photo will be uploaded to Anthropic for food recognition. Nothing is sent until you confirm.")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.vMutedForeground)
+                                .lineSpacing(4)
+
+                            Button {
+                                recognizePhoto(pendingPhotoData)
+                            } label: {
+                                Text("Use this photo")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .tracking(0.4)
+                                    .foregroundStyle(Color.vBackground)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.vForeground)
+                            }
+
+                            Button("Cancel", role: .cancel) {
+                                showPhotoReview = false
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .tracking(0.4)
+                            .foregroundStyle(Color.vMutedForeground)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 0)
+                                    .stroke(Color.vBorder, lineWidth: 0.5)
+                            )
+                        }
+                        .padding(20)
+                    }
+                    .background(Color.vBackground)
+                }
+                .presentationDetents([.large])
             }
         }
         .onChange(of: selected) {
@@ -230,6 +281,20 @@ struct MealsLogView: View {
         guard !trimmed.isEmpty, !selected.contains(trimmed) else { return }
         selected.append(trimmed)
         custom = ""
+    }
+
+    private func recognizePhoto(_ data: Data) {
+        recognizing = true
+        showPhotoReview = false
+
+        Task {
+            let foods = (try? await APIClient.shared.recognizeFood(imageData: data)) ?? []
+            for food in foods where !selected.contains(food) {
+                selected.append(food)
+            }
+            pendingPhotoData = nil
+            recognizing = false
+        }
     }
 }
 

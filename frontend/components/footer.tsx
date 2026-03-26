@@ -45,11 +45,8 @@ export function Footer() {
               <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
                 Legal
               </p>
-              <Link href="#" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="/privacy" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
                 Privacy
-              </Link>
-              <Link href="#" className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-                Terms
               </Link>
             </div>
           </div>

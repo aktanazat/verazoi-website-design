@@ -18,6 +18,7 @@ final class AppState {
     var stabilityTrend: [StabilityTrendPoint] = []
     var foodImpacts: [FoodImpact] = []
     var weeklyInsight: WeeklyInsight?
+    var weeklyInsightPreview: WeeklyInsightPreview?
     var fetchError: String?
     var isLoadingTrends = false
     var isLoadingFoodImpact = false
@@ -207,9 +208,24 @@ final class AppState {
         } catch {}
     }
 
+    func fetchInsightPreview() async {
+        guard let preview = try? await APIClient.shared.getWeeklyInsightPreview() else {
+            weeklyInsightPreview = nil
+            return
+        }
+
+        weeklyInsightPreview = WeeklyInsightPreview(
+            weekStart: preview.weekStart,
+            weekEnd: preview.weekEnd,
+            systemPrompt: preview.systemPrompt,
+            userPrompt: preview.userPrompt
+        )
+    }
+
     func generateInsight() async {
+        guard let preview = weeklyInsightPreview else { return }
         do {
-            let insight = try await APIClient.shared.generateWeeklyInsight()
+            let insight = try await APIClient.shared.generateWeeklyInsight(weekStart: preview.weekStart, userPrompt: preview.userPrompt)
             weeklyInsight = WeeklyInsight(id: insight.id, weekStart: insight.weekStart, summary: insight.summary, generatedAt: insight.generatedAt)
         } catch {}
     }
@@ -217,11 +233,13 @@ final class AppState {
     func syncWearableToBackend() {
         guard let w = wearable else { return }
         Task {
-            try? await APIClient.shared.syncWearable(
+            if (try? await APIClient.shared.syncWearable(
                 heartRate: w.latestHeartRate, steps: w.todaySteps,
                 activeMinutes: w.todayActiveMinutes, sleepHours: w.lastSleepHours,
-                sleepQuality: w.lastSleepQuality
-            )
+                sleepQuality: w.lastSleepQuality, glucoseReadings: w.latestGlucoseReadings
+            )) != nil {
+                await fetchFromBackend()
+            }
         }
     }
 }

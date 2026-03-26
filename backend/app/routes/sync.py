@@ -14,11 +14,24 @@ async def sync_wearable(
     user_id: str = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db),
 ):
+    imported_glucose = 0
+
     await db.execute(
         """INSERT INTO wearable_data (user_id, heart_rate, steps, active_minutes, sleep_hours, sleep_quality)
            VALUES ($1::uuid, $2, $3, $4, $5, $6)""",
         user_id, body.heart_rate, body.steps, body.active_minutes, body.sleep_hours, body.sleep_quality,
     )
+
+    for reading in body.glucose_readings or []:
+        row = await db.fetchrow(
+            """INSERT INTO glucose_readings (user_id, value, timing, recorded_at)
+               VALUES ($1::uuid, $2, 'cgm', $3)
+               ON CONFLICT DO NOTHING
+               RETURNING 1""",
+            user_id, reading.value, reading.recorded_at,
+        )
+        if row:
+            imported_glucose += 1
 
     try:
         r = await get_redis()
@@ -26,7 +39,7 @@ async def sync_wearable(
     except Exception:
         pass
 
-    return {"status": "synced"}
+    return {"status": "synced", "glucose_readings_imported": imported_glucose}
 
 
 @router.get("/wearable")
