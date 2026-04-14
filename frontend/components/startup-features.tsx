@@ -231,7 +231,7 @@ export function StartupFeatures() {
   const desc = descriptions[activePage]
 
   return (
-    <section className="relative px-6 py-28 lg:py-36">
+    <section className="relative px-6 py-16 lg:py-20">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         <div className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.04] blur-[140px]" />

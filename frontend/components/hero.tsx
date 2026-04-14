@@ -10,8 +10,8 @@ export function Hero() {
   const [phase, setPhase] = useState<"intro" | "shrink" | "brand">("intro")
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("shrink"), 2200)
-    const t2 = setTimeout(() => setPhase("brand"), 3200)
+    const t1 = setTimeout(() => setPhase("shrink"), 1400)
+    const t2 = setTimeout(() => setPhase("brand"), 2000)
     return () => {
       clearTimeout(t1)
       clearTimeout(t2)
@@ -19,7 +19,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6 pt-20">
+    <section className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6 pt-20 lg:min-h-[78dvh]">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/4 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.06] blur-[150px]" />
         <div className="absolute -right-40 top-20 h-[500px] w-[500px] rounded-full bg-primary/[0.05] blur-[120px]" />
@@ -39,7 +39,7 @@ export function Hero() {
                 : "pointer-events-none absolute inset-0 scale-50 opacity-0 blur-md"
           }`}
         >
-          <h1 className="font-serif text-[clamp(4rem,10vw,8rem)] font-light leading-[0.95] tracking-tight">
+          <h1 className="font-serif text-[clamp(3.5rem,8vw,6.5rem)] font-light leading-[0.95] tracking-tight">
             <span className="text-gradient">This is metabolic</span>
             <br />
             <span className="italic text-foreground">intelligence.</span>

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MedScheduleView: View {
+    @Environment(\.design) private var design
     @State private var schedules: [APIClient.MedScheduleRecord] = []
     @State private var showAdd = false
     @State private var name = ""
@@ -30,7 +31,7 @@ struct MedScheduleView: View {
                             .font(.system(size: 13))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                            .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
 
                         HStack(spacing: 8) {
                             TextField("Dose", text: $doseValue)
@@ -38,7 +39,7 @@ struct MedScheduleView: View {
                                 .keyboardType(.decimalPad)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
-                                .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
 
                             HStack(spacing: 4) {
                                 VPillButton(title: "mg", isSelected: doseUnit == "mg") { doseUnit = "mg" }
@@ -68,7 +69,7 @@ struct MedScheduleView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 6)
                                         .background(selectedDays.contains(day) ? Color.vForeground : Color.clear)
-                                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                        .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
                                 }
                             }
                         }

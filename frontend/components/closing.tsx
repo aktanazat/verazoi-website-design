@@ -9,7 +9,7 @@ export function Closing() {
   const { ref, visible } = useScrollReveal(0.2)
 
   return (
-    <section className="relative px-6 py-32 lg:py-44">
+    <section className="relative px-6 py-20 lg:py-28">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         <div className="absolute left-1/2 top-1/2 h-[500px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.07] blur-[150px]" />

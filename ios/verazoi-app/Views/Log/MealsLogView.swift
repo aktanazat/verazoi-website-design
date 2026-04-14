@@ -11,6 +11,7 @@ private let quickFoods = [
 
 struct MealsLogView: View {
     @Environment(AppState.self) private var state
+    @Environment(\.design) private var design
     @State private var mealType = "Breakfast"
     @State private var selected: [String] = []
     @State private var custom = ""
@@ -24,6 +25,7 @@ struct MealsLogView: View {
     @State private var recognizeError: String?
     @State private var recognizing = false
     @State private var playbook: [(food: String, delta: Double, suggestion: String?)] = []
+    @State private var playbookTask: Task<Void, Never>?
 
     var body: some View {
         ScrollView {
@@ -108,7 +110,7 @@ struct MealsLogView: View {
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 10)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 0)
+                                        RoundedRectangle(cornerRadius: design.buttonRadius)
                                             .stroke(Color.vBorder, lineWidth: 0.5)
                                     )
                                     .onSubmit { addCustom() }
@@ -119,7 +121,7 @@ struct MealsLogView: View {
                                         .foregroundStyle(Color.vMutedForeground)
                                         .frame(width: 40, height: 40)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 0)
+                                            RoundedRectangle(cornerRadius: design.buttonRadius)
                                                 .stroke(Color.vBorder, lineWidth: 0.5)
                                         )
                                 }
@@ -130,7 +132,7 @@ struct MealsLogView: View {
                                         .foregroundStyle(Color.vMutedForeground)
                                         .frame(width: 40, height: 40)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 0)
+                                            RoundedRectangle(cornerRadius: design.buttonRadius)
                                                 .stroke(Color.vBorder, lineWidth: 0.5)
                                         )
                                 }
@@ -200,7 +202,7 @@ struct MealsLogView: View {
                                         .padding(.vertical, 6)
                                         .background(Color.vSecondary)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 0)
+                                            RoundedRectangle(cornerRadius: design.buttonRadius)
                                                 .stroke(Color.vForeground.opacity(0.15), lineWidth: 0.5)
                                         )
                                     }
@@ -218,7 +220,7 @@ struct MealsLogView: View {
                                 .frame(minHeight: 100)
                                 .padding(12)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 0)
+                                    RoundedRectangle(cornerRadius: design.buttonRadius)
                                         .stroke(Color.vBorder, lineWidth: 0.5)
                                 )
                                 .padding(.top, 12)
@@ -285,7 +287,7 @@ struct MealsLogView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 0)
+                                RoundedRectangle(cornerRadius: design.buttonRadius)
                                     .stroke(Color.vBorder, lineWidth: 0.5)
                             )
                         }
@@ -297,20 +299,30 @@ struct MealsLogView: View {
             }
         }
         .onChange(of: selected) {
-            fetchPlaybook()
+            queuePlaybookFetch()
+        }
+        .onDisappear {
+            playbookTask?.cancel()
         }
     }
 
-    private func fetchPlaybook() {
+    private func queuePlaybookFetch() {
+        playbookTask?.cancel()
+
         guard !selected.isEmpty else {
             playbook = []
             return
         }
-        Task {
+
+        let foods = selected
+        playbookTask = Task { @MainActor in
             do {
-                let entries = try await APIClient.shared.getPlaybook(foods: selected)
+                try await Task.sleep(for: .milliseconds(250))
+                let entries = try await APIClient.shared.getPlaybook(foods: foods)
+                guard !Task.isCancelled, foods == selected else { return }
                 playbook = entries.map { (food: $0.food, delta: $0.avgDelta, suggestion: $0.suggestion) }
             } catch {
+                guard !Task.isCancelled, foods == selected else { return }
                 playbook = []
             }
         }

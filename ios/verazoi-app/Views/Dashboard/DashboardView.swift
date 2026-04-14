@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(AppState.self) private var state
+    @Environment(\.design) private var design
 
     var body: some View {
         NavigationStack {
@@ -26,7 +27,7 @@ struct DashboardView: View {
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.vAmber.opacity(0.08))
-                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vAmber.opacity(0.2), lineWidth: 0.5))
+                        .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vAmber.opacity(0.2), lineWidth: 0.5))
                         .padding(.top, 12)
                     }
 
@@ -44,8 +45,8 @@ struct DashboardView: View {
 
                     VStack(spacing: 16) {
                         StabilityScoreView(score: state.stabilityScore, readings: state.glucoseReadings)
-                        SpikeRiskView()
-                        GoalProgressView()
+                        SpikeRiskView(result: state.stabilityResult)
+                        GoalProgressView(progress: state.goalProgress)
                         DailyTimelineView(events: state.timeline)
 
                         NavigationLink { TrendsView() } label: {

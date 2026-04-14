@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GoalProgressView: View {
-    @Environment(AppState.self) private var state
+    let progress: GoalProgress
 
     var body: some View {
         VCard {
@@ -11,21 +11,21 @@ struct GoalProgressView: View {
                 VStack(spacing: 16) {
                     ProgressRow(
                         label: "Glucose in range",
-                        current: "\(Int(state.goalProgress.glucoseInRangePct))%",
-                        fraction: state.goalProgress.glucoseInRangePct / 100
+                        current: "\(Int(progress.glucoseInRangePct))%",
+                        fraction: progress.glucoseInRangePct / 100
                     )
                     ProgressRow(
                         label: "Steps",
-                        current: "\(state.goalProgress.stepsToday) / \(state.goalProgress.stepsTarget)",
-                        fraction: state.goalProgress.stepsTarget > 0
-                            ? Double(state.goalProgress.stepsToday) / Double(state.goalProgress.stepsTarget)
+                        current: "\(progress.stepsToday) / \(progress.stepsTarget)",
+                        fraction: progress.stepsTarget > 0
+                            ? Double(progress.stepsToday) / Double(progress.stepsTarget)
                             : 0
                     )
                     ProgressRow(
                         label: "Sleep",
-                        current: "\(String(format: "%.1f", state.goalProgress.sleepLast)) / \(String(format: "%.0f", state.goalProgress.sleepTarget)) hrs",
-                        fraction: state.goalProgress.sleepTarget > 0
-                            ? state.goalProgress.sleepLast / state.goalProgress.sleepTarget
+                        current: "\(String(format: "%.1f", progress.sleepLast)) / \(String(format: "%.0f", progress.sleepTarget)) hrs",
+                        fraction: progress.sleepTarget > 0
+                            ? progress.sleepLast / progress.sleepTarget
                             : 0
                     )
                 }

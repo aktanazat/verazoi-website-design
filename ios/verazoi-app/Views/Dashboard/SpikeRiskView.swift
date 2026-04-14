@@ -1,11 +1,12 @@
 import SwiftUI
 
 struct SpikeRiskView: View {
-    @Environment(AppState.self) private var state
+    let result: StabilityResult?
+    @Environment(\.design) private var design
     @State private var expandedFactor: String?
 
     private var riskPercent: Int {
-        if let result = state.stabilityResult {
+        if let result {
             return Int((result.spikeRisk * 100).rounded())
         }
         return 0
@@ -18,11 +19,11 @@ struct SpikeRiskView: View {
     }
 
     private var hasData: Bool {
-        state.stabilityResult != nil
+        result != nil
     }
 
     private var displayFactors: [DisplayFactor] {
-        if let result = state.stabilityResult, !result.spikeFactors.isEmpty {
+        if let result, !result.spikeFactors.isEmpty {
             return result.spikeFactors.map { DisplayFactor(label: $0.label, impact: $0.impact, explanation: $0.explanation) }
         }
         return []
@@ -79,7 +80,7 @@ struct SpikeRiskView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.vSecondary.opacity(0.5))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 0)
+                        RoundedRectangle(cornerRadius: design.buttonRadius)
                             .stroke(Color.vBorder, lineWidth: 0.5)
                     )
                     .padding(.top, 20)
@@ -104,7 +105,7 @@ struct SpikeRiskView: View {
                         .padding(.top, 16)
                     }
 
-                    if let result = state.stabilityResult, let suggestion = result.suggestion {
+                    if let suggestion = result?.suggestion {
                         Divider()
                             .foregroundStyle(Color.vBorder)
                             .padding(.top, 20)

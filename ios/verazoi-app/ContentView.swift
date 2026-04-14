@@ -12,6 +12,11 @@ struct ContentView: View {
     @State private var wearableState = WearableState()
     @State private var authState = AuthState()
     @AppStorage("verazoi_onboarding_complete") private var onboardingComplete = false
+    @AppStorage("verazoi_design_variant") private var variantRaw = "classic"
+
+    private var design: DesignVariant {
+        DesignVariant(rawValue: variantRaw) ?? .classic
+    }
 
     var body: some View {
         Group {
@@ -23,15 +28,15 @@ struct ContentView: View {
                 }
             } else if authState.isAuthenticated {
                 TabView(selection: $selectedTab) {
-                    Tab("Dashboard", systemImage: "chart.bar", value: .dashboard) {
+                    Tab("Dashboard", systemImage: design == .soft ? "heart.text.clipboard.fill" : "chart.bar", value: .dashboard) {
                         DashboardView()
                     }
 
-                    Tab("Log", systemImage: "square.and.pencil", value: .log) {
+                    Tab("Log", systemImage: design == .soft ? "plus.circle.fill" : "square.and.pencil", value: .log) {
                         LogTabView()
                     }
 
-                    Tab("Settings", systemImage: "gearshape", value: .settings) {
+                    Tab("Settings", systemImage: design == .soft ? "gearshape.fill" : "gearshape", value: .settings) {
                         SettingsView()
                     }
                 }
@@ -40,6 +45,7 @@ struct ContentView: View {
                 LoginView()
             }
         }
+        .environment(\.design, design)
         .environment(appState)
         .environment(wearableState)
         .environment(authState)

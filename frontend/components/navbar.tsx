@@ -9,6 +9,8 @@ import { basePath } from "@/lib/utils"
 const links = [
   { label: "Overview", href: "#overview" },
   { label: "App", href: "#quick-view" },
+  { label: "Our Story", href: "#our-story" },
+  { label: "Testimonials", href: "#testimonials" },
   { label: "FAQ", href: "#faq" },
 ]
 

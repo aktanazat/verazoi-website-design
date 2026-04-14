@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DailyTimelineView: View {
     let events: [TimelineEvent]
+    @Environment(\.design) private var design
 
     var body: some View {
         VCard {
@@ -34,7 +35,7 @@ struct DailyTimelineView: View {
                             HStack(alignment: .top, spacing: 16) {
                                 VStack(spacing: 0) {
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 0)
+                                        RoundedRectangle(cornerRadius: design.buttonRadius)
                                             .stroke(Color.vBorder, lineWidth: 0.5)
                                             .frame(width: 28, height: 28)
                                         Image(systemName: event.type.systemImage)

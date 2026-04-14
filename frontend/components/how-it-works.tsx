@@ -116,7 +116,7 @@ export function HowItWorks() {
   const { ref, visible } = useScrollReveal(0.1)
 
   return (
-    <section id="how-it-works" className="relative px-6 py-28 lg:py-36">
+    <section id="how-it-works" className="relative px-6 py-16 lg:py-20">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         <div className="absolute right-0 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-primary/[0.05] blur-[120px]" />

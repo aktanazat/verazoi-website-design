@@ -3,6 +3,8 @@ import { ScrollProgress } from "@/components/scroll-progress"
 import { Hero } from "@/components/hero"
 import { PhoneMockup } from "@/components/phone-mockup"
 import { PageSectionsTabs } from "@/components/page-sections-tabs"
+import { OurStory } from "@/components/our-story"
+import { Testimonials } from "@/components/testimonials"
 import { Lifestyle } from "@/components/lifestyle"
 import { FAQ } from "@/components/faq"
 import { Closing } from "@/components/closing"
@@ -16,6 +18,8 @@ export default function Home() {
       <Hero />
       <PhoneMockup />
       <PageSectionsTabs />
+      <OurStory />
+      <Testimonials />
       <Lifestyle />
       <FAQ />
       <Closing />

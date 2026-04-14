@@ -1,5 +1,28 @@
 import SwiftUI
 
+enum DesignVariant: String, CaseIterable {
+    case classic
+    case soft
+
+    var title: String { self == .soft ? "Soft" : "Classic" }
+    var cardRadius: CGFloat { self == .soft ? 16 : 0 }
+    var pillRadius: CGFloat { self == .soft ? 20 : 0 }
+    var buttonRadius: CGFloat { self == .soft ? 12 : 0 }
+    var cardShadow: CGFloat { self == .soft ? 4 : 0 }
+    var useIconTabs: Bool { self == .soft }
+}
+
+private struct DesignKey: EnvironmentKey {
+    static let defaultValue = DesignVariant.classic
+}
+
+extension EnvironmentValues {
+    var design: DesignVariant {
+        get { self[DesignKey.self] }
+        set { self[DesignKey.self] = newValue }
+    }
+}
+
 extension Color {
     // Indigo Vitals - Light Mode (matching website oklch values)
     static let vBackground = Color(red: 0.953, green: 0.949, blue: 0.969)      // oklch(0.965 0.007 285)
@@ -29,6 +52,7 @@ extension Font {
 
 struct VCard<Content: View>: View {
     let content: Content
+    @Environment(\.design) private var design
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
@@ -38,10 +62,12 @@ struct VCard<Content: View>: View {
         content
             .padding(20)
             .background(Color.vCard)
+            .clipShape(RoundedRectangle(cornerRadius: design.cardRadius))
             .overlay(
-                RoundedRectangle(cornerRadius: 0)
-                    .stroke(Color.vBorder, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: design.cardRadius)
+                    .stroke(Color.vBorder, lineWidth: design == .soft ? 0 : 0.5)
             )
+            .shadow(color: .black.opacity(design == .soft ? 0.06 : 0), radius: design.cardShadow, y: 2)
     }
 }
 
@@ -60,6 +86,7 @@ struct VPillButton: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.design) private var design
 
     var body: some View {
         Button(action: action) {
@@ -71,10 +98,11 @@ struct VPillButton: View {
                 .foregroundStyle(isSelected ? Color.vPrimaryForeground : Color.vMutedForeground)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(isSelected ? Color.vForeground : Color.clear)
+                .background(isSelected ? (design == .soft ? Color.vPrimary : Color.vForeground) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: design.pillRadius))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 0)
-                        .stroke(isSelected ? Color.vForeground : Color.vBorder, lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: design.pillRadius)
+                        .stroke(Color.vBorder, lineWidth: isSelected || design == .soft ? 0 : 0.5)
                 )
         }
     }

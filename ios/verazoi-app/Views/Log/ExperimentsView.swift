@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ExperimentsView: View {
+    @Environment(\.design) private var design
     @State private var experiments: [APIClient.ExperimentRecord] = []
     @State private var showCreate = false
     @State private var name = ""
@@ -33,7 +34,7 @@ struct ExperimentsView: View {
                                 .font(.system(size: 13))
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
-                                .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
 
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -44,7 +45,7 @@ struct ExperimentsView: View {
                                         .font(.system(size: 13))
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 8)
-                                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                        .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
                                 }
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Food B")
@@ -54,7 +55,7 @@ struct ExperimentsView: View {
                                         .font(.system(size: 13))
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 8)
-                                        .overlay(RoundedRectangle(cornerRadius: 0).stroke(Color.vBorder, lineWidth: 0.5))
+                                        .overlay(RoundedRectangle(cornerRadius: design.buttonRadius).stroke(Color.vBorder, lineWidth: 0.5))
                                 }
                             }
 

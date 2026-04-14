@@ -25,7 +25,7 @@ export function Lifestyle() {
   const { ref, visible } = useScrollReveal(0.15)
 
   return (
-    <section className="relative px-6 py-28 lg:py-36">
+    <section className="relative px-6 py-16 lg:py-20">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         <div className="absolute -left-20 top-1/3 h-[400px] w-[400px] rounded-full bg-primary/[0.04] blur-[120px]" />

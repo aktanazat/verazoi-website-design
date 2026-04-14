@@ -3,15 +3,16 @@ import SwiftUI
 struct StabilityScoreView: View {
     let score: Int
     let readings: [GlucoseReading]
+    @Environment(\.design) private var design
 
     @State private var displayed = 0
     @State private var animationProgress: CGFloat = 0
     @State private var countTask: Task<Void, Never>?
 
     private var label: String {
-        if displayed >= 80 { return "Excellent" }
-        if displayed >= 60 { return "Good" }
-        if displayed >= 40 { return "Fair" }
+        if score >= 80 { return "Excellent" }
+        if score >= 60 { return "Good" }
+        if score >= 40 { return "Fair" }
         return "Needs attention"
     }
 
@@ -48,7 +49,7 @@ struct StabilityScoreView: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 0)
+                            RoundedRectangle(cornerRadius: design.buttonRadius)
                                 .stroke(Color.vBorder, lineWidth: 0.5)
                         )
                 }
@@ -88,6 +89,9 @@ struct StabilityScoreView: View {
         }
         .onAppear { startAnimation(delay: true) }
         .onChange(of: score) { startAnimation(delay: false) }
+        .onDisappear {
+            countTask?.cancel()
+        }
     }
 
     private func startAnimation(delay: Bool) {

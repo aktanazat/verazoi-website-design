@@ -507,7 +507,7 @@ export function PhoneMockup() {
   }
 
   return (
-    <section id="overview" className="relative px-6 py-16 lg:py-24 overflow-hidden">
+    <section id="overview" className="relative px-6 py-12 lg:py-16 overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.06] blur-[160px]" />
       </div>

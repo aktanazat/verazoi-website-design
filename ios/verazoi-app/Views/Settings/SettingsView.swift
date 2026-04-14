@@ -15,6 +15,7 @@ struct SettingsView: View {
                     .padding(.top, 12)
 
                 VStack(spacing: 16) {
+                    AppearanceCard()
                     AccountCard()
                     PrivacyCard()
                     CGMSettingsView()
@@ -36,6 +37,55 @@ struct SettingsView: View {
     }
 }
 
+private struct AppearanceCard: View {
+    @AppStorage("verazoi_design_variant") private var variantRaw = "classic"
+
+    private var design: DesignVariant {
+        DesignVariant(rawValue: variantRaw) ?? .classic
+    }
+
+    var body: some View {
+        VCard {
+            VStack(alignment: .leading, spacing: 0) {
+                VLabelText(text: "Appearance")
+
+                Text("Choose your visual style")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.vMutedForeground)
+                    .padding(.top, 8)
+
+                HStack(spacing: 12) {
+                    ForEach(DesignVariant.allCases, id: \.self) { option in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                variantRaw = option.rawValue
+                            }
+                        } label: {
+                            VStack(spacing: 8) {
+                                RoundedRectangle(cornerRadius: option == .soft ? 12 : 0)
+                                    .fill(Color.vCard)
+                                    .frame(height: 48)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: option == .soft ? 12 : 0)
+                                            .stroke(design == option ? Color.vPrimary : Color.vBorder, lineWidth: design == option ? 1.5 : 0.5)
+                                    )
+                                    .shadow(color: .black.opacity(option == .soft ? 0.06 : 0), radius: 4, y: 2)
+
+                                Text(option.title)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .tracking(0.3)
+                                    .foregroundStyle(design == option ? Color.vPrimary : Color.vMutedForeground)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.top, 16)
+            }
+        }
+    }
+}
+
 private struct PrivacyCard: View {
     var body: some View {
         VCard {
@@ -54,6 +104,7 @@ private struct PrivacyCard: View {
 
 private struct AccountCard: View {
     @Environment(AuthState.self) private var auth
+    @Environment(\.design) private var design
     @State private var showLogoutConfirmation = false
 
     var body: some View {
@@ -78,7 +129,7 @@ private struct AccountCard: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 0)
+                            RoundedRectangle(cornerRadius: design.buttonRadius)
                                 .stroke(Color.vBorder, lineWidth: 0.5)
                         )
                 }
@@ -95,6 +146,7 @@ private struct AccountCard: View {
 
 private struct WearableConnectionCard: View {
     @Environment(WearableState.self) private var wearable
+    @Environment(\.design) private var design
     @State private var showProviderPicker = false
 
     var body: some View {
@@ -176,7 +228,7 @@ private struct WearableConnectionCard: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 0)
+                                RoundedRectangle(cornerRadius: design.buttonRadius)
                                     .stroke(Color.vBorder, lineWidth: 0.5)
                             )
                     }
@@ -226,7 +278,7 @@ private struct WearableConnectionCard: View {
                                 .padding(.vertical, 14)
                                 .padding(.horizontal, 16)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 0)
+                                    RoundedRectangle(cornerRadius: design.buttonRadius)
                                         .stroke(Color.vBorder, lineWidth: 0.5)
                                 )
                             }
